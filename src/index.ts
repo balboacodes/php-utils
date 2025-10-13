@@ -1,9 +1,64 @@
 /**
+ * @link https://www.php.net/manual/en/function.abs.php
+ */
+export function abs(value: number): number {
+    return value < 0 ? -value : value;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-all.php
+ */
+export function array_all<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): boolean {
+    for (const [key, value] of Object.entries(array)) {
+        if (!callback(value as T, key)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-any.php
+ */
+export function array_any<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): boolean {
+    for (const [key, value] of Object.entries(array)) {
+        if (callback(value as T, key)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * mode is always 0 because there are no associative arrays in JS.
  * @link https://php.net/manual/en/function.array-filter.php
  */
 export function array_filter<T>(array: T[], callback?: (value: T) => boolean, _mode: 0 = 0): T[] {
     return array.filter((value) => (callback ? !!callback(value) : value));
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-find-key.php
+ */
+export function array_find_key<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): string | number | null {
+    for (const [key, value] of Object.entries(array)) {
+        if (callback(value as T, key)) {
+            return key;
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -29,6 +84,38 @@ export function array_map<TItem extends unknown[], TReturn>(
     }
 
     return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-merge.php
+ */
+export function array_merge(...arrays: (any[] | {})[]): { [key: string | number]: any } {
+    const result: { [key: string | number]: any } = {};
+    let numericIndex = 0;
+
+    for (const arr of arrays) {
+        // PHP arrays can be either associative or indexed.
+        const entries = Object.entries(arr);
+
+        for (const [key, value] of entries) {
+            if (/^\d+$/.test(key)) {
+                // Numeric key → reindex sequentially
+                result[numericIndex++] = value;
+            } else {
+                // String key → overwrite if exists
+                result[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-pop.php
+ */
+export function array_pop<T>(array: T[]): T | undefined {
+    return array.pop() ?? undefined;
 }
 
 /**
@@ -64,12 +151,65 @@ export function array_reverse<T>(array: T[], _preserveKeys: false = false): T[] 
 /**
  * @link https://php.net/manual/en/function.array-shift.php
  */
-export function array_shift<T>(array: T[]): T | null {
+export function array_shift<T>(array: T[]): T | undefined {
     if (array.length === 0) {
-        return null;
+        return undefined;
     }
 
     return array.shift()!;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-slice.php
+ */
+export function array_slice<T, Pk extends boolean = false>(
+    array: T[],
+    offset: number,
+    length?: number,
+    preserveKeys?: Pk,
+): Pk extends true ? { [key: number]: T } : T[] {
+    const arrLength = array.length;
+
+    // Handle negative offset
+    if (offset < 0) {
+        offset = arrLength + offset;
+
+        if (offset < 0) {
+            offset = 0;
+        }
+    }
+
+    // Default length = until end
+    if (length === undefined) {
+        length = arrLength - offset;
+    } else if (length < 0) {
+        length = arrLength - offset + length;
+
+        if (length < 0) {
+            length = 0;
+        }
+    }
+
+    const resultArray = array.slice(offset, offset + length);
+
+    if (preserveKeys) {
+        const result: { [key: number]: T } = {};
+
+        for (let i = 0; i < resultArray.length; i++) {
+            result[offset + i] = resultArray[i];
+        }
+
+        return result as any;
+    }
+
+    return resultArray;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-values.php
+ */
+export function array_values<T>(array: { [key: string | number]: T } | T[]): T[] {
+    return Object.values(array);
 }
 
 /**
@@ -2108,6 +2248,20 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
     const re = new RegExp(`(^|[${escapedSeparators}])([^${escapedSeparators}])`, 'g');
 
     return string.replace(re, (_match, before, ch) => before + ch.toUpperCase());
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.unset.php
+ *
+ * Variables cannot be unset in JS, so we will only accept an array or object and key.
+ */
+export function unset<T>(array: { [key: string | number]: T } | T[], key: string | number): void {
+    // Remove the key/property if it exists (silent if not)
+    if (Array.isArray(array)) {
+        delete array[Number(key)];
+    } else {
+        delete array[key];
+    }
 }
 
 /**

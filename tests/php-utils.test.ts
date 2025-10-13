@@ -1,9 +1,85 @@
 import * as php from '../src/index';
 import { expect, test } from 'vitest';
 
+test('abs', () => {
+    expect(php.abs(-4.2)).toBe(4.2);
+    expect(php.abs(5)).toBe(5);
+    expect(php.abs(-5)).toBe(5);
+});
+
+test('array_all', () => {
+    const object = {
+        a: 'dog',
+        b: 'cat',
+        c: 'cow',
+        d: 'duck',
+        e: 'goose',
+        f: 'elephant',
+    };
+
+    expect(php.array_all(object, (value) => php.strlen(value) < 12)).toBe(true);
+    expect(php.array_all(object, (value) => php.strlen(value) > 5)).toBe(false);
+    expect(php.array_all(object, (_value, key) => typeof key === 'string')).toBe(true);
+
+    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
+
+    expect(php.array_all(array, (value) => php.strlen(value) < 12)).toBe(true);
+    expect(php.array_all(array, (value) => php.strlen(value) > 5)).toBe(false);
+    expect(php.array_all(array, (_value, key) => typeof key === 'string')).toBe(true);
+});
+
+test('array_any', () => {
+    const object = {
+        a: 'dog',
+        b: 'cat',
+        c: 'cow',
+        d: 'duck',
+        e: 'goose',
+        f: 'elephant',
+    };
+
+    expect(php.array_any(object, (value) => php.strlen(value) > 5)).toBe(true);
+    expect(php.array_any(object, (value) => php.strlen(value) < 3)).toBe(false);
+    expect(php.array_any(object, (_value, key) => typeof key !== 'string')).toBe(false);
+
+    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
+
+    expect(php.array_any(array, (value) => php.strlen(value) > 5)).toBe(true);
+    expect(php.array_any(array, (value) => php.strlen(value) < 3)).toBe(false);
+    expect(php.array_any(array, (_value, key) => typeof key !== 'string')).toBe(false);
+});
+
 test('array_filter', () => {
     expect(php.array_filter([1, 2, 3, 4, 5], (v: number): boolean => v % 2 !== 0)).toEqual([1, 3, 5]);
     expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
+});
+
+test('array_find_key', () => {
+    const obj = { a: 'dog', b: 'cat', c: 'cow', d: 'duck', e: 'goose', f: 'elephant' };
+
+    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.strlen(value) > 4)).toBe('e');
+    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
+        null,
+    );
+    expect(php.array_find_key(obj, (value: string, key: string | number) => value[0] === key)).toBe('c');
+    expect(
+        php.array_find_key(obj, (_value: string, key: string | number) => php.preg_match('/^([a-f])$/', String(key))),
+    ).toBe('a');
+
+    const arr = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
+
+    expect(Number(php.array_find_key(arr, (value: string, _key: string | number) => php.strlen(value) > 4))).toBe(4);
+    expect(php.array_find_key(arr, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
+        null,
+    );
+    expect(php.array_find_key(arr, (value: string, key: string | number) => value[0] === key)).toBe(null);
+    expect(
+        Number(
+            php.array_find_key(arr, (_value: string, key: string | number) =>
+                php.preg_match('/^([a-f])$/', String(key)),
+            ),
+        ),
+    ).toBe(0);
 });
 
 test('array_map', () => {
@@ -29,6 +105,21 @@ test('array_map', () => {
     ]);
 });
 
+test('array_merge', () => {
+    expect(
+        php.array_merge({ color: 'red', 0: 2, 1: 4 }, { 0: 'a', 1: 'b', color: 'green', shape: 'trapezoid', 2: 4 }),
+    ).toEqual({ color: 'green', 0: 2, 1: 4, 2: 'a', 3: 'b', shape: 'trapezoid', 4: 4 });
+
+    expect(php.array_merge([], { 1: 'data' })).toEqual({ 0: 'data' });
+});
+
+test('array_pop', () => {
+    const array = ['orange', 'banana', 'apple', 'raspberry'];
+
+    expect(php.array_pop(array)).toBe('raspberry');
+    expect(array).toEqual(['orange', 'banana', 'apple']);
+});
+
 test('array_reduce', () => {
     expect(php.array_reduce([1, 2, 3, 4, 5], (carry, item) => (carry += item))).toBe(15);
     expect(php.array_reduce([1, 2, 3, 4, 5], (carry, item) => (carry *= item), 10)).toBe(1200);
@@ -41,6 +132,22 @@ test('array_reverse', () => {
 
 test('array_shift', () => {
     expect(php.array_shift(['orange', 'banana', 'apple', 'raspberry'])).toBe('orange');
+    expect(php.array_shift([])).toBe(undefined);
+});
+
+test('array_slice', () => {
+    let input = ['a', 'b', 'c', 'd', 'e'];
+
+    expect(php.array_slice(input, 2)).toEqual(['c', 'd', 'e']);
+    expect(php.array_slice(input, -2, 1)).toEqual(['d']);
+    expect(php.array_slice(input, 0, 3)).toEqual(['a', 'b', 'c']);
+    expect(php.array_slice(input, 2, -1)).toEqual(['c', 'd']);
+    expect(php.array_slice(input, 2, -1, true)).toEqual({ 2: 'c', 3: 'd' });
+});
+
+test('array_values', () => {
+    expect(php.array_values({ size: 'XL', color: 'gold' })).toEqual(['XL', 'gold']);
+    expect(php.array_values(['XL', 'gold'])).toEqual(['XL', 'gold']);
 });
 
 test('base64_decode', () => {
@@ -507,6 +614,20 @@ test('trim', () => {
 test('ucwords', () => {
     expect(php.ucwords('hello world!')).toBe('Hello World!');
     expect(php.ucwords('hello|world!', '|')).toBe('Hello|World!');
+});
+
+test('unset', () => {
+    const arr = ['foo', 'bar', 'baz'];
+
+    php.unset(arr, 1);
+
+    expect(arr).toEqual(['foo', undefined, 'baz']);
+
+    const obj = { foo: 1, bar: 2, baz: 3 };
+
+    php.unset(obj, 'bar');
+
+    expect(obj).toEqual({ foo: 1, baz: 3 });
 });
 
 test('wordwrap', () => {
