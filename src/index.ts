@@ -2593,7 +2593,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
 export function unset<T>(array: { [key: string | number]: T } | T[], key: string | number): void {
     // Remove the key/property if it exists (silent if not)
     if (Array.isArray(array)) {
-        delete array[Number(key)];
+        array.splice(Number(key), 1)
     } else {
         delete array[key];
     }
