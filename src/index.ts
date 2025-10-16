@@ -802,7 +802,17 @@ export function http_build_query(
             return [];
         }
 
-        return [`${encode(prefix)}=${encode(String(data))}`];
+        let value: string;
+
+        if (data === true) {
+          value = '1';
+        } else if (data === false) {
+          value = '0';
+        } else {
+          value = String(data);
+        }
+
+        return [`${encode(prefix)}=${encode(value)}`];
     };
 
     return build(data).join(argSeparator);
