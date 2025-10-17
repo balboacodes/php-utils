@@ -8,6 +8,12 @@ test('abs', () => {
 });
 
 test('array_all', () => {
+    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
+
+    expect(php.array_all(array, (value) => php.strlen(value) < 12)).toBe(true);
+    expect(php.array_all(array, (value) => php.strlen(value) > 5)).toBe(false);
+    expect(php.array_all(array, (_value, key) => typeof key === 'string')).toBe(true);
+
     const object = {
         a: 'dog',
         b: 'cat',
@@ -20,15 +26,15 @@ test('array_all', () => {
     expect(php.array_all(object, (value) => php.strlen(value) < 12)).toBe(true);
     expect(php.array_all(object, (value) => php.strlen(value) > 5)).toBe(false);
     expect(php.array_all(object, (_value, key) => typeof key === 'string')).toBe(true);
-
-    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
-
-    expect(php.array_all(array, (value) => php.strlen(value) < 12)).toBe(true);
-    expect(php.array_all(array, (value) => php.strlen(value) > 5)).toBe(false);
-    expect(php.array_all(array, (_value, key) => typeof key === 'string')).toBe(true);
 });
 
 test('array_any', () => {
+    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
+
+    expect(php.array_any(array, (value) => php.strlen(value) > 5)).toBe(true);
+    expect(php.array_any(array, (value) => php.strlen(value) < 3)).toBe(false);
+    expect(php.array_any(array, (_value, key) => typeof key !== 'string')).toBe(false);
+
     const object = {
         a: 'dog',
         b: 'cat',
@@ -38,15 +44,9 @@ test('array_any', () => {
         f: 'elephant',
     };
 
-    expect(php.array_any(object, (value) => php.strlen(value) > 5)).toBe(true);
-    expect(php.array_any(object, (value) => php.strlen(value) < 3)).toBe(false);
+    expect(php.array_any(object, (value: string) => php.strlen(value) > 5)).toBe(true);
+    expect(php.array_any(object, (value: string) => php.strlen(value) < 3)).toBe(false);
     expect(php.array_any(object, (_value, key) => typeof key !== 'string')).toBe(false);
-
-    const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
-
-    expect(php.array_any(array, (value) => php.strlen(value) > 5)).toBe(true);
-    expect(php.array_any(array, (value) => php.strlen(value) < 3)).toBe(false);
-    expect(php.array_any(array, (_value, key) => typeof key !== 'string')).toBe(false);
 });
 
 test('array_combine', () => {
@@ -59,21 +59,20 @@ test('array_combine', () => {
 
 test('array_filter', () => {
     expect(php.array_filter([1, 2, 3, 4, 5], (v: number): boolean => v % 2 !== 0)).toEqual([1, 3, 5]);
+    expect(php.array_filter({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (v: number): boolean => v % 2 !== 0)).toEqual({
+        1: 1,
+        3: 3,
+        5: 5,
+    });
     expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
+    expect(php.array_filter({ 0: 'foo', 1: false, 2: -1, 3: null, 4: '', 5: '0', 6: 0 }, undefined)).toEqual({
+        0: 'foo',
+        2: -1,
+        5: '0',
+    });
 });
 
 test('array_find_key', () => {
-    const obj = { a: 'dog', b: 'cat', c: 'cow', d: 'duck', e: 'goose', f: 'elephant' };
-
-    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.strlen(value) > 4)).toBe('e');
-    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
-        null,
-    );
-    expect(php.array_find_key(obj, (value: string, key: string | number) => value[0] === key)).toBe('c');
-    expect(
-        php.array_find_key(obj, (_value: string, key: string | number) => php.preg_match('/^([a-f])$/', String(key))),
-    ).toBe('a');
-
     const arr = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
 
     expect(Number(php.array_find_key(arr, (value: string, _key: string | number) => php.strlen(value) > 4))).toBe(4);
@@ -88,28 +87,40 @@ test('array_find_key', () => {
             ),
         ),
     ).toBe(0);
+
+    const obj = { a: 'dog', b: 'cat', c: 'cow', d: 'duck', e: 'goose', f: 'elephant' };
+
+    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.strlen(value) > 4)).toBe('e');
+    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
+        null,
+    );
+    expect(php.array_find_key(obj, (value: string, key: string | number) => value[0] === key)).toBe('c');
+    expect(
+        php.array_find_key(obj, (_value: string, key: string | number) => php.preg_match('/^([a-f])$/', String(key))),
+    ).toBe('a');
 });
 
 test('array_first', () => {
     expect(php.array_first(['a', 'b', 'c', 'd'])).toBe('a');
+    expect(php.array_first({ 0: 'a', 1: 'b', 2: 'c', 3: 'd' })).toBe('a');
 });
 
 test('array_flip', () => {
     expect(php.array_flip(['oranges', 'apples', 'pears'])).toEqual({ oranges: 0, apples: 1, pears: 2 });
-    expect(php.array_flip({ a: 1, b: 1, c: 2 })).toEqual({ 1: 'b', 2: 'c' });
+    expect(php.array_flip({ a: 0, b: 1, c: 2 })).toEqual({ 0: 'a', 1: 'b', 2: 'c' });
 });
 
 test('array_intersect_key', () => {
-    expect(
-        php.array_intersect_key({ blue: 1, red: 2, green: 3, purple: 4 }, { green: 5, blue: 6, yellow: 7, cyan: 8 }),
-    ).toEqual({ blue: 1, green: 3 });
-
     expect(php.array_intersect_key(['blue', 'red', 'green', 'purple'], ['green', 'blue', 'yellow', 'cyan'])).toEqual([
         'blue',
         'red',
         'green',
         'purple',
     ]);
+
+    expect(
+        php.array_intersect_key({ blue: 1, red: 2, green: 3, purple: 4 }, { green: 5, blue: 6, yellow: 7, cyan: 8 }),
+    ).toEqual({ blue: 1, green: 3 });
 });
 
 test('array_key_first', () => {

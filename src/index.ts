@@ -9,7 +9,7 @@ export function abs(value: number): number {
  * @link https://www.php.net/manual/en/function.array-all.php
  */
 export function array_all<T>(
-    array: { [key: string | number]: T } | T[],
+    array: T[] | Record<string, T>,
     callback: (value: T, key: string | number) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
@@ -25,7 +25,7 @@ export function array_all<T>(
  * @link https://www.php.net/manual/en/function.array-any.php
  */
 export function array_any<T>(
-    array: { [key: string | number]: T } | T[],
+    array: T[] | Record<string, T>,
     callback: (value: T, key: string | number) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
@@ -40,36 +40,79 @@ export function array_any<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-combine.php
  */
-export function array_combine<V>(keys: (string | number)[], values: V[]): { [key: string | number]: V } {
+export function array_combine<T>(keys: (string | number)[], values: T[]): Record<string, T> {
     if (keys.length !== values.length) {
         throw new TypeError(
             `array_combine(): Both parameters should have an equal number of elements (keys=${keys.length}, values=${values.length})`,
         );
     }
 
-    const result: { [key: string | number]: V } = {};
+    const result: Record<string, T> = {};
 
     for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        result[key] = values[i];
+        result[String(keys[i])] = values[i];
     }
 
     return result;
 }
 
+export const ARRAY_FILTER_USE_KEY = 1;
+export const ARRAY_FILTER_USE_BOTH = 2;
+
 /**
- * mode is always 0 because there are no associative arrays in JS.
  * @link https://php.net/manual/en/function.array-filter.php
  */
-export function array_filter<T>(array: T[], callback?: (value: T) => boolean, _mode: 0 = 0): T[] {
-    return array.filter((value) => (callback ? !!callback(value) : value));
+export function array_filter<T>(
+    array: T[] | Record<string, T>,
+    callback?: (value: any, key?: string | number) => boolean,
+    mode: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0 = 0,
+): T extends T[] ? T[] : Record<string, T> {
+    if (Array.isArray(array)) {
+        return array.filter((value, index) => {
+            if (!callback) {
+                return !!value;
+            }
+
+            switch (mode) {
+                case ARRAY_FILTER_USE_KEY:
+                    return callback(index);
+                case ARRAY_FILTER_USE_BOTH:
+                    return callback(value, index);
+                default:
+                    return callback(value);
+            }
+        }) as any;
+    }
+
+    const obj: Record<string, any> = {};
+
+    for (const property in array) {
+        if (!Object.hasOwn(array, property)) {
+            continue;
+        }
+
+        const value = array[property];
+        const keep = callback
+            ? mode === ARRAY_FILTER_USE_KEY
+                ? callback(property)
+                : mode === ARRAY_FILTER_USE_BOTH
+                  ? callback(value, property)
+                  : callback(value)
+            : !!value;
+
+        if (keep) {
+            obj[property] = value;
+        }
+    }
+
+    return obj as any;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-find-key.php
  */
 export function array_find_key<T>(
-    array: { [key: string | number]: T } | T[],
+    array: T[] | Record<string, T>,
     callback: (value: T, key: string | number) => boolean,
 ): string | number | null {
     for (const [key, value] of Object.entries(array)) {
@@ -84,21 +127,15 @@ export function array_find_key<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-first.php
  */
-export function array_first<TValue>(array: TValue[]): TValue | undefined {
-    for (const value of array) {
-        return value;
-    }
-
-    return undefined;
+export function array_first<T>(array: T[] | Record<string, T>): T | null {
+    return Object.values(array)[0] ?? null;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-flip.php
  */
-export function array_flip<T extends string | number>(
-    array: { [key: string | number]: T } | T[],
-): { [key: string]: string | number } {
-    const result: { [key: string]: string | number } = {};
+export function array_flip<T extends string | number>(array: T[] | Record<string, T>): Record<string, string | number> {
+    const result: Record<string, string | number> = {};
 
     for (const [key, value] of Object.entries(array)) {
         if (typeof value !== 'string' && typeof value !== 'number') {
@@ -115,15 +152,15 @@ export function array_flip<T extends string | number>(
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
  */
 export function array_intersect_key<T>(
-    array: { [key: string | number]: T } | T[],
-    ...arrays: ({ [key: string | number]: any } | any[])[]
-): { [key: string | number]: T } | T[] {
+    array: T[] | Record<string, T>,
+    ...arrays: (Record<string, any> | any[])[]
+): T extends T[] ? T[] : Record<string, T> {
     if (arrays.length === 0) {
         throw new TypeError('array_intersect_key(): At least 2 arrays are required');
     }
 
     const isArray = Array.isArray(array);
-    const result: { [key: string | number]: T } = {};
+    const result: Record<string, T> = {};
 
     outer: for (const key of Object.keys(array)) {
         for (const arr of arrays) {
@@ -136,8 +173,8 @@ export function array_intersect_key<T>(
     }
 
     return isArray
-        ? Object.keys(result).map((k) => (isNaN(Number(k)) ? (result as any)[k] : result[Number(k)]))
-        : result;
+        ? (Object.keys(result).map((k) => (isNaN(Number(k)) ? (result as any)[k] : result[Number(k)])) as any)
+        : (result as any);
 }
 
 /**
