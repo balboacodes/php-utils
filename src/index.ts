@@ -1,9 +1,210 @@
 /**
+ * @link https://www.php.net/manual/en/function.abs.php
+ */
+export function abs(value: number): number {
+    return value < 0 ? -value : value;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-all.php
+ */
+export function array_all<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): boolean {
+    for (const [key, value] of Object.entries(array)) {
+        if (!callback(value as T, key)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-any.php
+ */
+export function array_any<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): boolean {
+    for (const [key, value] of Object.entries(array)) {
+        if (callback(value as T, key)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-combine.php
+ */
+export function array_combine<V>(keys: (string | number)[], values: V[]): { [key: string | number]: V } {
+    if (keys.length !== values.length) {
+        throw new TypeError(
+            `array_combine(): Both parameters should have an equal number of elements (keys=${keys.length}, values=${values.length})`,
+        );
+    }
+
+    const result: { [key: string | number]: V } = {};
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        result[key] = values[i];
+    }
+
+    return result;
+}
+
+/**
  * mode is always 0 because there are no associative arrays in JS.
  * @link https://php.net/manual/en/function.array-filter.php
  */
 export function array_filter<T>(array: T[], callback?: (value: T) => boolean, _mode: 0 = 0): T[] {
     return array.filter((value) => (callback ? !!callback(value) : value));
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-find-key.php
+ */
+export function array_find_key<T>(
+    array: { [key: string | number]: T } | T[],
+    callback: (value: T, key: string | number) => boolean,
+): string | number | null {
+    for (const [key, value] of Object.entries(array)) {
+        if (callback(value as T, key)) {
+            return key;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-first.php
+ */
+export function array_first<TValue>(array: TValue[]): TValue | undefined {
+    for (const value of array) {
+        return value;
+    }
+
+    return undefined;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-flip.php
+ */
+export function array_flip<T extends string | number>(
+    array: { [key: string | number]: T } | T[],
+): { [key: string]: string | number } {
+    const result: { [key: string]: string | number } = {};
+
+    for (const [key, value] of Object.entries(array)) {
+        if (typeof value !== 'string' && typeof value !== 'number') {
+            throw new TypeError(`array_flip(): Can only flip STRING and INTEGER values, found ${typeof value}`);
+        }
+
+        result[String(value)] = isNaN(Number(key)) ? key : Number(key);
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-intersect-key.php
+ */
+export function array_intersect_key<T>(
+    array: { [key: string | number]: T } | T[],
+    ...arrays: ({ [key: string | number]: any } | any[])[]
+): { [key: string | number]: T } | T[] {
+    if (arrays.length === 0) {
+        throw new TypeError('array_intersect_key(): At least 2 arrays are required');
+    }
+
+    const isArray = Array.isArray(array);
+    const result: { [key: string | number]: T } = {};
+
+    outer: for (const key of Object.keys(array)) {
+        for (const arr of arrays) {
+            if (arr == null || typeof arr !== 'object' || !(key in arr)) {
+                continue outer;
+            }
+        }
+
+        result[key] = (array as any)[key];
+    }
+
+    return isArray
+        ? Object.keys(result).map((k) => (isNaN(Number(k)) ? (result as any)[k] : result[Number(k)]))
+        : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-key-first.php
+ */
+export function array_key_first(array: { [key: string | number]: any } | any[]): string | number | null {
+    const keys = Object.keys(array);
+
+    if (keys.length === 0) {
+        return null;
+    }
+
+    const firstKey = keys[0];
+    // PHP preserves numeric string keys as integers where possible
+    return /^[0-9]+$/.test(firstKey) ? Number(firstKey) : firstKey;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-key-last.php
+ */
+export function array_key_last(array: { [key: string | number]: any } | any[]): string | number | null {
+    const keys = Object.keys(array);
+
+    if (keys.length === 0) {
+        return null;
+    }
+
+    const lastKey = keys[keys.length - 1];
+    // PHP preserves numeric string keys as integers where possible
+    return /^[0-9]+$/.test(lastKey) ? Number(lastKey) : lastKey;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-keys.php
+ */
+export function array_keys<T>(
+    array: { [key: string | number]: T } | T[],
+    searchValue?: T,
+    strict: boolean = false,
+): (string | number)[] {
+    const keys = Object.keys(array);
+
+    if (searchValue === undefined) {
+        // Return all keys
+        return keys.map((k) => (/^[0-9]+$/.test(k) ? Number(k) : k));
+    }
+
+    // Filter keys by matching value
+    const result: (string | number)[] = [];
+
+    for (const key of keys) {
+        const value = (array as any)[key];
+        const match = strict ? value === searchValue : value == searchValue;
+
+        if (match) {
+            result.push(/^[0-9]+$/.test(key) ? Number(key) : key);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-last.php
+ */
+export function array_last<TValue>(array: TValue[]): TValue | undefined {
+    return array.length > 0 ? array_slice(array, -1)[0] : undefined;
 }
 
 /**
@@ -29,6 +230,51 @@ export function array_map<TItem extends unknown[], TReturn>(
     }
 
     return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-merge.php
+ */
+export function array_merge(...arrays: (any[] | {})[]): { [key: string | number]: any } {
+    const result: { [key: string | number]: any } = {};
+    let numericIndex = 0;
+
+    for (const arr of arrays) {
+        // PHP arrays can be either associative or indexed.
+        const entries = Object.entries(arr);
+
+        for (const [key, value] of entries) {
+            if (/^\d+$/.test(key)) {
+                // Numeric key → reindex sequentially
+                result[numericIndex++] = value;
+            } else {
+                // String key → overwrite if exists
+                result[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-pop.php
+ */
+export function array_pop<T>(array: T[]): T | undefined {
+    return array.pop() ?? undefined;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-push.php
+ */
+export function array_push<T>(array: T[], ...values: T[]): number {
+    if (values.length === 0) {
+        return array.length;
+    }
+
+    array.push(...values);
+
+    return array.length;
 }
 
 /**
@@ -64,12 +310,80 @@ export function array_reverse<T>(array: T[], _preserveKeys: false = false): T[] 
 /**
  * @link https://php.net/manual/en/function.array-shift.php
  */
-export function array_shift<T>(array: T[]): T | null {
+export function array_shift<T>(array: T[]): T | undefined {
     if (array.length === 0) {
-        return null;
+        return undefined;
     }
 
     return array.shift()!;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-slice.php
+ */
+export function array_slice<T, Pk extends boolean = false>(
+    array: T[],
+    offset: number,
+    length?: number,
+    preserveKeys?: Pk,
+): Pk extends true ? { [key: number]: T } : T[] {
+    const arrLength = array.length;
+
+    // Handle negative offset
+    if (offset < 0) {
+        offset = arrLength + offset;
+
+        if (offset < 0) {
+            offset = 0;
+        }
+    }
+
+    // Default length = until end
+    if (length === undefined) {
+        length = arrLength - offset;
+    } else if (length < 0) {
+        length = arrLength - offset + length;
+
+        if (length < 0) {
+            length = 0;
+        }
+    }
+
+    const resultArray = array.slice(offset, offset + length);
+
+    if (preserveKeys) {
+        const result: { [key: number]: T } = {};
+
+        for (let i = 0; i < resultArray.length; i++) {
+            result[offset + i] = resultArray[i];
+        }
+
+        return result as any;
+    }
+
+    return resultArray;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-unshift.php
+ */
+export function array_unshift<T>(array: T[], ...values: T[]): number {
+    if (values.length === 0) {
+        // Return current length if no values provided.
+        return array.length;
+    }
+
+    // Prepend in correct order (PHP inserts left to right).
+    array.splice(0, 0, ...values);
+
+    return array.length;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-values.php
+ */
+export function array_values<T>(array: { [key: string | number]: T } | T[]): T[] {
+    return Object.values(array);
 }
 
 /**
@@ -441,6 +755,67 @@ export async function hash(
     }
 
     return digest.toString('hex');
+}
+
+export const PHP_QUERY_RFC1738 = 1;
+export const PHP_QUERY_RFC3986 = 2;
+
+/**
+ * @link https://www.php.net/manual/en/function.http-build-query.php
+ */
+export function http_build_query(
+    data: { [key: string]: any } | any[],
+    numericPrefix: string = '',
+    argSeparator: string = '&',
+    encodingType: number = PHP_QUERY_RFC1738,
+): string {
+    const encode = (str: string): string =>
+        encodingType === PHP_QUERY_RFC3986 ? encodeURIComponent(str) : encodeURIComponent(str).replace(/%20/g, '+');
+
+    const build = (data: any, prefix?: string): string[] => {
+        if (data === null || data === undefined) {
+            return [];
+        }
+
+        if (typeof data === 'object') {
+            const pairs: string[] = [];
+
+            for (const key in data) {
+                if (!Object.prototype.hasOwnProperty.call(data, key)) {
+                    continue;
+                }
+
+                const k = Array.isArray(data)
+                    ? `${prefix ? prefix + '[' + key + ']' : numericPrefix + key}`
+                    : prefix
+                      ? `${prefix}[${key}]`
+                      : key;
+
+                pairs.push(...build(data[key], k));
+            }
+
+            return pairs;
+        }
+
+        // Primitive value
+        if (prefix === undefined) {
+            return [];
+        }
+
+        let value: string;
+
+        if (data === true) {
+          value = '1';
+        } else if (data === false) {
+          value = '0';
+        } else {
+          value = String(data);
+        }
+
+        return [`${encode(prefix)}=${encode(value)}`];
+    };
+
+    return build(data).join(argSeparator);
 }
 
 /**
@@ -1474,6 +1849,56 @@ export function random_int(min: number, max: number): number {
     return min + (rand % (range + 1));
 }
 
+export const SORT_REGULAR = 0;
+export const SORT_NUMERIC = 1;
+export const SORT_STRING = 2;
+export const SORT_NATURAL = 6;
+export const SORT_FLAG_CASE = 8;
+
+/**
+ * @link https://www.php.net/manual/en/function.rsort.php
+ */
+export function rsort<T>(
+    array: T[],
+    flags: (
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+    )[] = [SORT_STRING],
+): true {
+    const flagCase = in_array(SORT_FLAG_CASE, flags);
+    const numeric = in_array(SORT_NUMERIC, flags);
+    const string = in_array(SORT_STRING, flags);
+    const natural = in_array(SORT_NATURAL, flags);
+
+    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+
+    array.sort((a: any, b: any) => {
+        if (a == null) a = '';
+        if (b == null) b = '';
+
+        let cmp: number;
+        if (numeric) {
+            cmp = parseFloat(a) - parseFloat(b);
+        } else if (string || natural) {
+            cmp = collator.compare(String(a), String(b));
+        } else {
+            cmp = a == b ? 0 : a > b ? 1 : -1;
+        }
+
+        return -cmp; // Reverse order for rsort
+    });
+
+    // Reindex keys numerically
+    for (let i = 0; i < array.length; i++) {
+        array[i] = array[i];
+    }
+
+    return true;
+}
+
 /**
  * @link https://php.net/manual/en/function.rtrim.php
  */
@@ -1489,6 +1914,66 @@ export function rtrim(string: string, characters?: string): string {
     const pattern = new RegExp(`[${escaped}]+$`, 'u');
 
     return string.replace(pattern, '');
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.sort.php
+ */
+export function sort<T>(
+    array: T[],
+    flags: (
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+    )[] = [SORT_STRING],
+): true {
+    const flagCase = in_array(SORT_FLAG_CASE, flags);
+    const numeric = in_array(SORT_NUMERIC, flags);
+    const string = in_array(SORT_STRING, flags);
+    const natural = in_array(SORT_NATURAL, flags);
+
+    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+
+    array.sort((a: any, b: any) => {
+        // Handle undefined/null same as PHP (treat as empty string).
+        if (a == null) {
+            a = '';
+        }
+
+        if (b == null) {
+            b = '';
+        }
+
+        if (numeric) {
+            const na = parseFloat(a);
+            const nb = parseFloat(b);
+
+            return na - nb;
+        }
+
+        if (string || natural) {
+            const sa = String(a);
+            const sb = String(b);
+
+            return collator.compare(sa, sb);
+        }
+
+        // Default PHP regular comparison.
+        if (a == b) {
+            return 0;
+        }
+
+        return a > b ? 1 : -1;
+    });
+
+    // PHP resets array keys to 0-based numeric
+    for (let i = 0; i < array.length; i++) {
+        array[i] = array[i];
+    }
+
+    return true;
 }
 
 /**
@@ -2108,6 +2593,20 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
     const re = new RegExp(`(^|[${escapedSeparators}])([^${escapedSeparators}])`, 'g');
 
     return string.replace(re, (_match, before, ch) => before + ch.toUpperCase());
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.unset.php
+ *
+ * Variables cannot be unset in JS, so we will only accept an array or object and key.
+ */
+export function unset<T>(array: { [key: string | number]: T } | T[], key: string | number): void {
+    // Remove the key/property if it exists (silent if not)
+    if (Array.isArray(array)) {
+        array.splice(Number(key), 1)
+    } else {
+        delete array[key];
+    }
 }
 
 /**
