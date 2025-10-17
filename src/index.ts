@@ -805,11 +805,11 @@ export function http_build_query(
         let value: string;
 
         if (data === true) {
-          value = '1';
+            value = '1';
         } else if (data === false) {
-          value = '0';
+            value = '0';
         } else {
-          value = String(data);
+            value = String(data);
         }
 
         return [`${encode(prefix)}=${encode(value)}`];
@@ -2603,7 +2603,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
 export function unset<T>(array: { [key: string | number]: T } | T[], key: string | number): void {
     // Remove the key/property if it exists (silent if not)
     if (Array.isArray(array)) {
-        array.splice(Number(key), 1)
+        array.splice(Number(key), 1);
     } else {
         delete array[key];
     }
