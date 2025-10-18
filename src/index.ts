@@ -64,9 +64,9 @@ export const ARRAY_FILTER_USE_BOTH = 2;
  */
 export function array_filter<T>(
     array: T[] | Record<string, T>,
-    callback?: (value: any, key?: string | number) => boolean,
+    callback?: (value: T, key?: string | number) => boolean,
     mode: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0 = 0,
-): T extends T[] ? T[] : Record<string, T> {
+): T[] extends (infer T)[] ? T[] : Record<string, T> {
     if (Array.isArray(array)) {
         return array.filter((value, index) => {
             if (!callback) {
@@ -75,7 +75,7 @@ export function array_filter<T>(
 
             switch (mode) {
                 case ARRAY_FILTER_USE_KEY:
-                    return callback(index);
+                    return callback(index as T);
                 case ARRAY_FILTER_USE_BOTH:
                     return callback(value, index);
                 default:
@@ -94,7 +94,7 @@ export function array_filter<T>(
         const value = array[property];
         const keep = callback
             ? mode === ARRAY_FILTER_USE_KEY
-                ? callback(property)
+                ? callback(property as T)
                 : mode === ARRAY_FILTER_USE_BOTH
                   ? callback(value, property)
                   : callback(value)
@@ -114,10 +114,10 @@ export function array_filter<T>(
 export function array_find_key<T>(
     array: T[] | Record<string, T>,
     callback: (value: T, key: string | number) => boolean,
-): string | number | null {
+): T[] extends (infer T)[] ? number | null : string | null {
     for (const [key, value] of Object.entries(array)) {
         if (callback(value as T, key)) {
-            return key;
+            return Array.isArray(array) ? Number(key) : (key as any);
         }
     }
 
@@ -153,34 +153,33 @@ export function array_flip<T extends string | number>(array: T[] | Record<string
  */
 export function array_intersect_key<T>(
     array: T[] | Record<string, T>,
-    ...arrays: (Record<string, any> | any[])[]
-): T extends T[] ? T[] : Record<string, T> {
+    ...arrays: (T[] | Record<string, T>)[]
+): T[] extends (infer T)[] ? T[] : Record<string, T> {
     if (arrays.length === 0) {
         throw new TypeError('array_intersect_key(): At least 2 arrays are required');
     }
 
-    const isArray = Array.isArray(array);
     const result: Record<string, T> = {};
 
-    outer: for (const key of Object.keys(array)) {
+    outer: for (const [key, value] of Object.entries(array)) {
         for (const arr of arrays) {
-            if (arr == null || typeof arr !== 'object' || !(key in arr)) {
+            if (!(key in arr)) {
                 continue outer;
             }
         }
 
-        result[key] = (array as any)[key];
+        result[key] = value;
     }
 
-    return isArray
-        ? (Object.keys(result).map((k) => (isNaN(Number(k)) ? (result as any)[k] : result[Number(k)])) as any)
-        : (result as any);
+    return Array.isArray(array) ? (Object.values(result) as any) : (result as any);
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-key-first.php
  */
-export function array_key_first(array: { [key: string | number]: any } | any[]): string | number | null {
+export function array_key_first<T>(
+    array: T[] | Record<string, T>,
+): T[] extends (infer T)[] ? number | null : string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -188,14 +187,16 @@ export function array_key_first(array: { [key: string | number]: any } | any[]):
     }
 
     const firstKey = keys[0];
-    // PHP preserves numeric string keys as integers where possible
-    return /^[0-9]+$/.test(firstKey) ? Number(firstKey) : firstKey;
+
+    return Array.isArray(array) ? Number(firstKey) : (firstKey as any);
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-key-last.php
  */
-export function array_key_last(array: { [key: string | number]: any } | any[]): string | number | null {
+export function array_key_last<T>(
+    array: T[] | Record<string, T>,
+): T[] extends (infer T)[] ? number | null : string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -203,67 +204,69 @@ export function array_key_last(array: { [key: string | number]: any } | any[]): 
     }
 
     const lastKey = keys[keys.length - 1];
-    // PHP preserves numeric string keys as integers where possible
-    return /^[0-9]+$/.test(lastKey) ? Number(lastKey) : lastKey;
+
+    return Array.isArray(array) ? Number(lastKey) : (lastKey as any);
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-keys.php
  */
 export function array_keys<T>(
-    array: { [key: string | number]: T } | T[],
+    array: T[] | Record<string, T>,
     searchValue?: T,
     strict: boolean = false,
-): (string | number)[] {
-    const keys = Object.keys(array);
+): T[] extends (infer _)[] ? number[] : string[] {
+    const entries = Object.entries(array);
 
     if (searchValue === undefined) {
         // Return all keys
-        return keys.map((k) => (/^[0-9]+$/.test(k) ? Number(k) : k));
+        return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k)) as any;
     }
 
     // Filter keys by matching value
     const result: (string | number)[] = [];
 
-    for (const key of keys) {
-        const value = (array as any)[key];
+    for (const [key, value] of entries) {
         const match = strict ? value === searchValue : value == searchValue;
 
         if (match) {
-            result.push(/^[0-9]+$/.test(key) ? Number(key) : key);
+            result.push(Array.isArray(array) ? Number(key) : key);
         }
     }
 
-    return result;
+    return result as any;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-last.php
  */
-export function array_last<TValue>(array: TValue[]): TValue | undefined {
-    return array.length > 0 ? array_slice(array, -1)[0] : undefined;
+export function array_last<T>(array: T[] | Record<string, T>): T | null {
+    return Object.values(array).pop() ?? null;
 }
 
 /**
  * @link https://php.net/manual/en/function.array-map.php
  */
-export function array_map<TItem extends unknown[], TReturn>(
+export function array_map<TItem extends unknown[], TReturn = any>(
     callback?: (...items: TItem) => TReturn,
-    ...arrays: { [K in keyof TItem]: TItem[K][] }
-): TReturn[] {
-    // Determine iteration length (shortest array).
-    const minLen = Math.min(...arrays.map((a) => a.length));
-    const result: TReturn[] = [];
+    ...arrays: { [K in keyof TItem]: TItem[K][] | Record<string, TItem[K]> }
+): TReturn[] | Record<string, TReturn> {
+    if (arrays.length === 0) {
+        return [];
+    }
 
-    for (let i = 0; i < minLen; i++) {
-        const args = arrays.map((a) => a[i]);
+    const first = arrays[0];
+    const isObject = !Array.isArray(first);
 
-        if (callback) {
-            result.push(callback(...(args as any)));
-        } else {
-            // Undefined callback: return zipped arrays.
-            result.push(args as any);
-        }
+    const keys = Object.keys(first);
+    const result: any = isObject ? {} : [];
+
+    for (let key of keys) {
+        key = isObject ? key : (Number(key) as any);
+        const args = arrays.map((arr) => (arr as any)[key]);
+
+        // Undefined callback: return zipped arrays (PHP behavior)
+        result[key] = callback ? callback(...(args as any)) : args;
     }
 
     return result;
@@ -272,15 +275,12 @@ export function array_map<TItem extends unknown[], TReturn>(
 /**
  * @link https://www.php.net/manual/en/function.array-merge.php
  */
-export function array_merge(...arrays: (any[] | {})[]): { [key: string | number]: any } {
-    const result: { [key: string | number]: any } = {};
+export function array_merge(...arrays: (any[] | Record<string, any>)[]): Record<string, any> {
+    const result: Record<string, any> = {};
     let numericIndex = 0;
 
     for (const arr of arrays) {
-        // PHP arrays can be either associative or indexed.
-        const entries = Object.entries(arr);
-
-        for (const [key, value] of entries) {
+        for (const [key, value] of Object.entries(arr)) {
             if (/^\d+$/.test(key)) {
                 // Numeric key → reindex sequentially
                 result[numericIndex++] = value;
@@ -297,51 +297,106 @@ export function array_merge(...arrays: (any[] | {})[]): { [key: string | number]
 /**
  * @link https://www.php.net/manual/en/function.array-pop.php
  */
-export function array_pop<T>(array: T[]): T | undefined {
-    return array.pop() ?? undefined;
+export function array_pop<T>(array: T[] | Record<string, T>): T | null {
+    if (Array.isArray(array)) {
+        return array.pop() ?? null;
+    }
+
+    const last = Object.entries(array).pop();
+
+    if (last === undefined) {
+        return null;
+    }
+
+    delete array[last[0]];
+
+    return last[1] as any;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-push.php
  */
-export function array_push<T>(array: T[], ...values: T[]): number {
+export function array_push<T>(array: T[] | Record<string, T>, ...values: T[]): number {
     if (values.length === 0) {
+        return Object.keys(array).length;
+    }
+
+    if (Array.isArray(array)) {
+        array.push(...values);
+
         return array.length;
     }
 
-    array.push(...values);
+    let lastNumericKey =
+        Object.keys(array)
+            .filter((key) => /^\d+$/.test(key))
+            .map((key) => Number(key))
+            .sort((a, b) => a - b)
+            .pop() ?? 0;
 
-    return array.length;
+    values.forEach((value) => {
+        array[lastNumericKey + 1] = value;
+        lastNumericKey++;
+    });
+
+    return Object.keys(array).length;
 }
 
 /**
  * @link https://php.net/manual/en/function.array-reduce.php
  */
 export function array_reduce<TItem, TCarry = TItem>(
-    array: TItem[],
+    array: TItem[] | Record<string, TItem>,
     callback: (carry: TCarry, item: TItem) => TCarry,
     initial?: TCarry,
-): TCarry {
-    if (array.length === 0 && !initial) {
-        return null as any;
+): TCarry | null {
+    let carry: TCarry;
+    let started = false;
+
+    if (initial !== undefined) {
+        carry = initial;
+        started = true;
     }
 
-    let carry = initial ? (initial as TCarry) : (array[0] as unknown as TCarry);
-    const start = initial ? 0 : 1;
+    for (const value of Object.values(array)) {
+        if (!started) {
+            carry = value as unknown as TCarry;
+            started = true;
 
-    for (let i = start; i < array.length; i++) {
-        carry = callback(carry, array[i]);
+            continue;
+        }
+
+        carry = callback(carry!, value as TItem);
     }
 
-    return carry;
+    return started ? carry! : null;
 }
 
 /**
- * preserveKeys can only be undefined | false because there are no associative arrays in JS.
  * @link https://php.net/manual/en/function.array-reverse.php
  */
-export function array_reverse<T>(array: T[], _preserveKeys: false = false): T[] {
-    return array.slice().reverse();
+export function array_reverse<T>(
+    array: T[] | Record<string, T>,
+    preserveKeys: boolean = false,
+): T[] extends (infer T)[] ? T[] : Record<string, T> {
+    if (Array.isArray(array)) {
+        return array.slice().reverse();
+    }
+
+    const result: Record<string, T> = {};
+
+    Object.entries(array)
+        .reverse()
+        .forEach(([key, value], i) => {
+            // String keys always preserved; numeric keys may be reindexed
+            if (!preserveKeys && !isNaN(Number(key))) {
+                result[i] = value;
+            } else {
+                result[key] = value;
+            }
+        });
+
+    return result as any;
 }
 
 /**
@@ -419,7 +474,7 @@ export function array_unshift<T>(array: T[], ...values: T[]): number {
 /**
  * @link https://www.php.net/manual/en/function.array-values.php
  */
-export function array_values<T>(array: { [key: string | number]: T } | T[]): T[] {
+export function array_values<T>(array: Record<string, T> | T[]): T[] {
     return Object.values(array);
 }
 
@@ -2637,7 +2692,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
  *
  * Variables cannot be unset in JS, so we will only accept an array or object and key.
  */
-export function unset<T>(array: { [key: string | number]: T } | T[], key: string | number): void {
+export function unset<T>(array: Record<string, T> | T[], key: string | number): void {
     // Remove the key/property if it exists (silent if not)
     if (Array.isArray(array)) {
         array.splice(Number(key), 1);

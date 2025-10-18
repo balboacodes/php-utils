@@ -59,12 +59,12 @@ test('array_combine', () => {
 
 test('array_filter', () => {
     expect(php.array_filter([1, 2, 3, 4, 5], (v: number): boolean => v % 2 !== 0)).toEqual([1, 3, 5]);
+    expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
     expect(php.array_filter({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (v: number): boolean => v % 2 !== 0)).toEqual({
         1: 1,
         3: 3,
         5: 5,
     });
-    expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
     expect(php.array_filter({ 0: 'foo', 1: false, 2: -1, 3: null, 4: '', 5: '0', 6: 0 }, undefined)).toEqual({
         0: 'foo',
         2: -1,
@@ -124,18 +124,18 @@ test('array_intersect_key', () => {
 });
 
 test('array_key_first', () => {
-    expect(php.array_key_first({ a: 1, b: 2, c: 3 })).toBe('a');
     expect(php.array_key_first([1, 2, 3])).toBe(0);
+    expect(php.array_key_first({ a: 1, b: 2, c: 3 })).toBe('a');
 });
 
 test('array_key_last', () => {
-    expect(php.array_key_last({ a: 1, b: 2, c: 3 })).toBe('c');
     expect(php.array_key_last([1, 2, 3])).toBe(2);
+    expect(php.array_key_last({ a: 1, b: 2, c: 3 })).toBe('c');
 });
 
 test('array_keys', () => {
-    expect(php.array_keys({ 0: 100, color: 'red' })).toEqual([0, 'color']);
     expect(php.array_keys(['blue', 'red', 'green', 'blue', 'blue'], 'blue')).toEqual([0, 3, 4]);
+    expect(php.array_keys({ 0: 100, color: 'red' }, 'red')).toEqual(['color']);
     expect(
         php.array_keys({
             color: ['blue', 'red', 'green'],
@@ -146,6 +146,9 @@ test('array_keys', () => {
 
 test('array_last', () => {
     expect(php.array_last(['a', 'b', 'c', 'd'])).toBe('d');
+    expect(php.array_last([])).toBe(null);
+    expect(php.array_last({ 0: 'a', 1: 'b', 2: 'c', 3: 'd' })).toBe('d');
+    expect(php.array_last({})).toBe(null);
 });
 
 test('array_map', () => {
@@ -169,14 +172,45 @@ test('array_map', () => {
         [4, 'four', 'cuatro'],
         [5, 'five', 'cinco'],
     ]);
+
+    const d = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
+    const e = { 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco' };
+    const f = { 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five' };
+
+    expect(php.array_map((n: number): number => n * n * n, d)).toEqual({ 1: 1, 2: 8, 3: 27, 4: 64, 5: 125 });
+    expect(php.array_map((n: number, m: string): string => `The number ${n} is called ${m} in Spanish`, d, e)).toEqual({
+        1: 'The number 1 is called uno in Spanish',
+        2: 'The number 2 is called dos in Spanish',
+        3: 'The number 3 is called tres in Spanish',
+        4: 'The number 4 is called cuatro in Spanish',
+        5: 'The number 5 is called cinco in Spanish',
+    });
+
+    expect(php.array_map(undefined, d, f, e)).toEqual({
+        1: [1, 'one', 'uno'],
+        2: [2, 'two', 'dos'],
+        3: [3, 'three', 'tres'],
+        4: [4, 'four', 'cuatro'],
+        5: [5, 'five', 'cinco'],
+    });
 });
 
 test('array_merge', () => {
+    expect(php.array_merge(['red', 2, 4], ['a', 'b', 'green', 'trapezoid', 4])).toEqual({
+        0: 'red',
+        1: 2,
+        2: 4,
+        3: 'a',
+        4: 'b',
+        5: 'green',
+        6: 'trapezoid',
+        7: 4,
+    });
+    expect(php.array_merge([], { 1: 'data' })).toEqual({ 0: 'data' });
     expect(
         php.array_merge({ color: 'red', 0: 2, 1: 4 }, { 0: 'a', 1: 'b', color: 'green', shape: 'trapezoid', 2: 4 }),
     ).toEqual({ color: 'green', 0: 2, 1: 4, 2: 'a', 3: 'b', shape: 'trapezoid', 4: 4 });
-
-    expect(php.array_merge([], { 1: 'data' })).toEqual({ 0: 'data' });
+    expect(php.array_merge({}, { 1: 'data' })).toEqual({ 0: 'data' });
 });
 
 test('array_pop', () => {
@@ -184,6 +218,13 @@ test('array_pop', () => {
 
     expect(php.array_pop(array)).toBe('raspberry');
     expect(array).toEqual(['orange', 'banana', 'apple']);
+    expect(php.array_pop([])).toBe(null);
+
+    const obj = { 0: 'orange', 1: 'banana', 2: 'apple', 3: 'raspberry' };
+
+    expect(php.array_pop(obj)).toBe('raspberry');
+    expect(obj).toEqual({ 0: 'orange', 1: 'banana', 2: 'apple' });
+    expect(php.array_pop({})).toBe(null);
 });
 
 test('array_push', () => {
@@ -191,16 +232,44 @@ test('array_push', () => {
 
     expect(php.array_push(array, 'apple', 'raspberry')).toBe(4);
     expect(array).toEqual(['orange', 'banana', 'apple', 'raspberry']);
+
+    const obj = { 0: 'orange', 1: 'banana' };
+
+    expect(php.array_push(obj, 'apple', 'raspberry')).toBe(4);
+    expect(obj).toEqual({ 0: 'orange', 1: 'banana', 2: 'apple', 3: 'raspberry' });
 });
 
 test('array_reduce', () => {
     expect(php.array_reduce([1, 2, 3, 4, 5], (carry, item) => (carry += item))).toBe(15);
     expect(php.array_reduce([1, 2, 3, 4, 5], (carry, item) => (carry *= item), 10)).toBe(1200);
     expect(php.array_reduce([], (carry, item) => (carry += item), 'No data to reduce')).toBe('No data to reduce');
+    expect(php.array_reduce({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (carry, item) => (carry += item))).toBe(15);
+    expect(php.array_reduce({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (carry, item) => (carry *= item), 10)).toBe(1200);
+    expect(php.array_reduce({}, (carry, item) => (carry += item), 'No data to reduce')).toBe('No data to reduce');
 });
 
 test('array_reverse', () => {
     expect(php.array_reverse(['php', 4, ['green', 'red']])).toEqual([['green', 'red'], 4, 'php']);
+    expect(php.array_reverse({ 0: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } })).toEqual({
+        0: { 0: 'green', 1: 'red' },
+        1: 4,
+        2: 'php',
+    });
+    expect(php.array_reverse({ 0: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } }, true)).toEqual({
+        0: 'php',
+        1: 4,
+        2: { 0: 'green', 1: 'red' },
+    });
+    expect(php.array_reverse({ foo: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } })).toEqual({
+        1: { 0: 'green', 1: 'red' },
+        2: 4,
+        foo: 'php',
+    });
+    expect(php.array_reverse({ foo: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } }, true)).toEqual({
+        1: 4,
+        2: { 0: 'green', 1: 'red' },
+        foo: 'php',
+    });
 });
 
 test('array_shift', () => {
