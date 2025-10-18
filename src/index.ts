@@ -63,10 +63,20 @@ export const ARRAY_FILTER_USE_BOTH = 2;
  * @link https://php.net/manual/en/function.array-filter.php
  */
 export function array_filter<T>(
+    array: T[],
+    callback?: (value: T, key?: string | number) => boolean,
+    mode?: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0,
+): T[];
+export function array_filter<T>(
+    array: Record<string, T>,
+    callback?: (value: T, key?: string | number) => boolean,
+    mode?: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0,
+): Record<string, T>;
+export function array_filter<T>(
     array: T[] | Record<string, T>,
     callback?: (value: T, key?: string | number) => boolean,
     mode: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0 = 0,
-): T[] extends (infer T)[] ? T[] : Record<string, T> {
+): T[] | Record<string, T> {
     if (Array.isArray(array)) {
         return array.filter((value, index) => {
             if (!callback) {
@@ -111,10 +121,15 @@ export function array_filter<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-find-key.php
  */
+export function array_find_key<T>(array: T[], callback: (value: T, key: string | number) => boolean): number | null;
+export function array_find_key<T>(
+    array: Record<string, T>,
+    callback: (value: T, key: string | number) => boolean,
+): string | null;
 export function array_find_key<T>(
     array: T[] | Record<string, T>,
     callback: (value: T, key: string | number) => boolean,
-): T[] extends (infer T)[] ? number | null : string | null {
+): number | string | null {
     for (const [key, value] of Object.entries(array)) {
         if (callback(value as T, key)) {
             return Array.isArray(array) ? Number(key) : (key as any);
@@ -134,7 +149,9 @@ export function array_first<T>(array: T[] | Record<string, T>): T | null {
 /**
  * @link https://www.php.net/manual/en/function.array-flip.php
  */
-export function array_flip<T extends string | number>(array: T[] | Record<string, T>): Record<string, string | number> {
+export function array_flip<T>(array: T[]): Record<string, number>;
+export function array_flip<T>(array: Record<string, T>): Record<string, string>;
+export function array_flip<T>(array: T[] | Record<string, T>): Record<string, string | number> {
     const result: Record<string, string | number> = {};
 
     for (const [key, value] of Object.entries(array)) {
@@ -151,10 +168,12 @@ export function array_flip<T extends string | number>(array: T[] | Record<string
 /**
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
  */
+export function array_intersect_key<T>(array: T[], ...arrays: T[][]): T[];
+export function array_intersect_key<T>(array: Record<string, T>, ...arrays: Record<string, T>[]): Record<string, T>;
 export function array_intersect_key<T>(
     array: T[] | Record<string, T>,
     ...arrays: (T[] | Record<string, T>)[]
-): T[] extends (infer T)[] ? T[] : Record<string, T> {
+): T[] | Record<string, T> {
     if (arrays.length === 0) {
         throw new TypeError('array_intersect_key(): At least 2 arrays are required');
     }
@@ -177,9 +196,9 @@ export function array_intersect_key<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-key-first.php
  */
-export function array_key_first<T>(
-    array: T[] | Record<string, T>,
-): T[] extends (infer T)[] ? number | null : string | null {
+export function array_key_first<T>(array: T[]): number | null;
+export function array_key_first<T>(array: Record<string, T>): string | null;
+export function array_key_first<T>(array: T[] | Record<string, T>): number | string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -194,9 +213,9 @@ export function array_key_first<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-key-last.php
  */
-export function array_key_last<T>(
-    array: T[] | Record<string, T>,
-): T[] extends (infer T)[] ? number | null : string | null {
+export function array_key_last<T>(array: T[]): number | null;
+export function array_key_last<T>(array: Record<string, T>): string | null;
+export function array_key_last<T>(array: T[] | Record<string, T>): number | string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -211,19 +230,19 @@ export function array_key_last<T>(
 /**
  * @link https://www.php.net/manual/en/function.array-keys.php
  */
+export function array_keys<T>(array: T[], searchValue?: T, strict?: boolean): number[];
+export function array_keys<T>(array: Record<string, T>, searchValue?: T, strict?: boolean): string[];
 export function array_keys<T>(
     array: T[] | Record<string, T>,
     searchValue?: T,
     strict: boolean = false,
-): T[] extends (infer _)[] ? number[] : string[] {
+): number[] | string[] {
     const entries = Object.entries(array);
 
     if (searchValue === undefined) {
-        // Return all keys
         return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k)) as any;
     }
 
-    // Filter keys by matching value
     const result: (string | number)[] = [];
 
     for (const [key, value] of entries) {
@@ -247,6 +266,14 @@ export function array_last<T>(array: T[] | Record<string, T>): T | null {
 /**
  * @link https://php.net/manual/en/function.array-map.php
  */
+export function array_map<TItem extends unknown[], TReturn = any>(
+    callback?: (...items: TItem) => TReturn,
+    ...arrays: { [K in keyof TItem]: TItem[K][] }
+): TReturn[];
+export function array_map<TItem extends unknown[], TReturn = any>(
+    callback?: (...items: TItem) => TReturn,
+    ...arrays: { [K in keyof TItem]: Record<string, TItem[K]> }
+): Record<string, TReturn>;
 export function array_map<TItem extends unknown[], TReturn = any>(
     callback?: (...items: TItem) => TReturn,
     ...arrays: { [K in keyof TItem]: TItem[K][] | Record<string, TItem[K]> }
@@ -275,18 +302,17 @@ export function array_map<TItem extends unknown[], TReturn = any>(
 /**
  * @link https://www.php.net/manual/en/function.array-merge.php
  */
-export function array_merge(...arrays: (any[] | Record<string, any>)[]): Record<string, any> {
-    const result: Record<string, any> = {};
+export function array_merge<T>(...arrays: (T[] | Record<string, T>)[]): Record<string, T> {
+    const result: Record<string, T> = {};
     let numericIndex = 0;
 
     for (const arr of arrays) {
         for (const [key, value] of Object.entries(arr)) {
-            if (/^\d+$/.test(key)) {
-                // Numeric key → reindex sequentially
-                result[numericIndex++] = value;
-            } else {
-                // String key → overwrite if exists
+            // String keys always preserved; numeric keys reindexed
+            if (isNaN(Number(key))) {
                 result[key] = value;
+            } else {
+                result[numericIndex++] = value;
             }
         }
     }
@@ -329,7 +355,7 @@ export function array_push<T>(array: T[] | Record<string, T>, ...values: T[]): n
 
     let lastNumericKey =
         Object.keys(array)
-            .filter((key) => /^\d+$/.test(key))
+            .filter((key) => !isNaN(Number(key)))
             .map((key) => Number(key))
             .sort((a, b) => a - b)
             .pop() ?? 0;
@@ -375,10 +401,12 @@ export function array_reduce<TItem, TCarry = TItem>(
 /**
  * @link https://php.net/manual/en/function.array-reverse.php
  */
+export function array_reverse<T>(array: T[], preserveKeys?: boolean): T[];
+export function array_reverse<T>(array: Record<string, T>, preserveKeys?: boolean): Record<string, T>;
 export function array_reverse<T>(
     array: T[] | Record<string, T>,
     preserveKeys: boolean = false,
-): T[] extends (infer T)[] ? T[] : Record<string, T> {
+): T[] | Record<string, T> {
     if (Array.isArray(array)) {
         return array.slice().reverse();
     }
@@ -389,10 +417,10 @@ export function array_reverse<T>(
         .reverse()
         .forEach(([key, value], i) => {
             // String keys always preserved; numeric keys may be reindexed
-            if (!preserveKeys && !isNaN(Number(key))) {
-                result[i] = value;
-            } else {
+            if (preserveKeys || isNaN(Number(key))) {
                 result[key] = value;
+            } else {
+                result[i] = value;
             }
         });
 
@@ -402,35 +430,49 @@ export function array_reverse<T>(
 /**
  * @link https://php.net/manual/en/function.array-shift.php
  */
-export function array_shift<T>(array: T[]): T | undefined {
-    if (array.length === 0) {
-        return undefined;
+export function array_shift<T>(array: T[] | Record<string, T>): T | null {
+    if (Array.isArray(array)) {
+        return array.shift() ?? null;
     }
 
-    return array.shift()!;
+    const first = Object.entries(array).shift();
+
+    if (first === undefined) {
+        return null;
+    }
+
+    delete array[first[0]];
+
+    return first[1] as any;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-slice.php
  */
-export function array_slice<T, Pk extends boolean = false>(
-    array: T[],
+export function array_slice<T>(array: T[], offset: number, length?: number, preserveKeys?: boolean): T[];
+export function array_slice<T>(
+    array: Record<string, T>,
     offset: number,
     length?: number,
-    preserveKeys?: Pk,
-): Pk extends true ? { [key: number]: T } : T[] {
-    const arrLength = array.length;
+    preserveKeys?: boolean,
+): Record<string, T>;
+export function array_slice<T>(
+    array: T[] | Record<string, T>,
+    offset: number,
+    length?: number,
+    preserveKeys: boolean = false,
+): T[] | Record<string, T> {
+    const entries = Object.entries(array);
+    const arrLength = entries.length;
 
-    // Handle negative offset
     if (offset < 0) {
         offset = arrLength + offset;
-
-        if (offset < 0) {
-            offset = 0;
-        }
     }
 
-    // Default length = until end
+    if (offset < 0) {
+        offset = 0;
+    }
+
     if (length === undefined) {
         length = arrLength - offset;
     } else if (length < 0) {
@@ -441,40 +483,54 @@ export function array_slice<T, Pk extends boolean = false>(
         }
     }
 
-    const resultArray = array.slice(offset, offset + length);
+    const sliced = entries.slice(offset, offset + length);
 
-    if (preserveKeys) {
-        const result: { [key: number]: T } = {};
-
-        for (let i = 0; i < resultArray.length; i++) {
-            result[offset + i] = resultArray[i];
-        }
-
-        return result as any;
+    if (Array.isArray(array)) {
+        return sliced.map(([_, value]) => value);
     }
 
-    return resultArray;
+    const result: Record<string | number, T> = {};
+    let numericIndex = 0;
+
+    for (const [key, value] of sliced) {
+        // String keys always preserved; numeric keys may be reindexed
+        if (preserveKeys || isNaN(Number(key))) {
+            result[key] = value;
+        } else {
+            result[numericIndex++] = value;
+        }
+    }
+
+    return result;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-unshift.php
  */
-export function array_unshift<T>(array: T[], ...values: T[]): number {
-    if (values.length === 0) {
-        // Return current length if no values provided.
-        return array.length;
+export function array_unshift<T>(array: T[] | Record<string, T>, ...values: T[]): number {
+    if (Array.isArray(array)) {
+        return array.unshift(...values);
     }
 
-    // Prepend in correct order (PHP inserts left to right).
-    array.splice(0, 0, ...values);
+    const objValues = [...values, ...Object.values(array)];
 
-    return array.length;
+    for (const key in array) {
+        if (Object.hasOwn(array, key)) {
+            delete array[key];
+        }
+    }
+
+    for (let i = 0; i < objValues.length; i++) {
+        array[i] = objValues[i];
+    }
+
+    return objValues.length;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-values.php
  */
-export function array_values<T>(array: Record<string, T> | T[]): T[] {
+export function array_values<T>(array: T[] | Record<string, T>): T[] {
     return Object.values(array);
 }
 

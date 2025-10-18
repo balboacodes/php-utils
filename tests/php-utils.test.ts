@@ -273,29 +273,49 @@ test('array_reverse', () => {
 });
 
 test('array_shift', () => {
-    expect(php.array_shift(['orange', 'banana', 'apple', 'raspberry'])).toBe('orange');
-    expect(php.array_shift([])).toBe(undefined);
+    const array = ['orange', 'banana', 'apple', 'raspberry'];
+
+    expect(php.array_shift(array)).toBe('orange');
+    expect(array).toEqual(['banana', 'apple', 'raspberry']);
+    expect(php.array_shift([])).toBe(null);
+
+    const obj = { 0: 'orange', 1: 'banana', 2: 'apple', 3: 'raspberry' };
+
+    expect(php.array_shift(obj)).toBe('orange');
+    expect(obj).toEqual({ 1: 'banana', 2: 'apple', 3: 'raspberry' });
+    expect(php.array_shift({})).toBe(null);
 });
 
 test('array_slice', () => {
-    let input = ['a', 'b', 'c', 'd', 'e'];
+    const array = ['a', 'b', 'c', 'd', 'e'];
 
-    expect(php.array_slice(input, 2)).toEqual(['c', 'd', 'e']);
-    expect(php.array_slice(input, -2, 1)).toEqual(['d']);
-    expect(php.array_slice(input, 0, 3)).toEqual(['a', 'b', 'c']);
-    expect(php.array_slice(input, 2, -1)).toEqual(['c', 'd']);
-    expect(php.array_slice(input, 2, -1, true)).toEqual({ 2: 'c', 3: 'd' });
+    expect(php.array_slice(array, 2)).toEqual(['c', 'd', 'e']);
+    expect(php.array_slice(array, -2, 1)).toEqual(['d']);
+    expect(php.array_slice(array, 0, 3)).toEqual(['a', 'b', 'c']);
+    expect(php.array_slice(array, 2, -1)).toEqual(['c', 'd']);
+
+    const obj = { 0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e' };
+
+    expect(php.array_slice(obj, 2)).toEqual({ 0: 'c', 1: 'd', 2: 'e' });
+    expect(php.array_slice(obj, -2, 1)).toEqual({ 0: 'd' });
+    expect(php.array_slice(obj, 0, 3)).toEqual({ 0: 'a', 1: 'b', 2: 'c' });
+    expect(php.array_slice(obj, 2, -1)).toEqual({ 0: 'c', 1: 'd' });
+    expect(php.array_slice(obj, 2, -1, true)).toEqual({ 2: 'c', 3: 'd' });
 });
 
 test('array_unshift', () => {
     const array = ['orange', 'banana'];
     expect(php.array_unshift(array, 'apple', 'raspberry')).toBe(4);
     expect(array).toEqual(['apple', 'raspberry', 'orange', 'banana']);
+
+    const obj = { 0: 'orange', 1: 'banana' };
+    expect(php.array_unshift(obj, 'apple', 'raspberry')).toBe(4);
+    expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana' });
 });
 
 test('array_values', () => {
-    expect(php.array_values({ size: 'XL', color: 'gold' })).toEqual(['XL', 'gold']);
     expect(php.array_values(['XL', 'gold'])).toEqual(['XL', 'gold']);
+    expect(php.array_values({ size: 'XL', color: 'gold' })).toEqual(['XL', 'gold']);
 });
 
 test('base64_decode', () => {
