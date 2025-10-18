@@ -12,7 +12,7 @@ test('array_all', () => {
 
     expect(php.array_all(array, (value) => php.strlen(value) < 12)).toBe(true);
     expect(php.array_all(array, (value) => php.strlen(value) > 5)).toBe(false);
-    expect(php.array_all(array, (_value, key) => typeof key === 'string')).toBe(true);
+    expect(php.array_all(array, (_, key) => typeof key === 'string')).toBe(true);
 
     const object = {
         a: 'dog',
@@ -25,7 +25,7 @@ test('array_all', () => {
 
     expect(php.array_all(object, (value) => php.strlen(value) < 12)).toBe(true);
     expect(php.array_all(object, (value) => php.strlen(value) > 5)).toBe(false);
-    expect(php.array_all(object, (_value, key) => typeof key === 'string')).toBe(true);
+    expect(php.array_all(object, (_, key) => typeof key === 'string')).toBe(true);
 });
 
 test('array_any', () => {
@@ -33,7 +33,7 @@ test('array_any', () => {
 
     expect(php.array_any(array, (value) => php.strlen(value) > 5)).toBe(true);
     expect(php.array_any(array, (value) => php.strlen(value) < 3)).toBe(false);
-    expect(php.array_any(array, (_value, key) => typeof key !== 'string')).toBe(false);
+    expect(php.array_any(array, (_, key) => typeof key !== 'string')).toBe(false);
 
     const object = {
         a: 'dog',
@@ -44,9 +44,9 @@ test('array_any', () => {
         f: 'elephant',
     };
 
-    expect(php.array_any(object, (value: string) => php.strlen(value) > 5)).toBe(true);
-    expect(php.array_any(object, (value: string) => php.strlen(value) < 3)).toBe(false);
-    expect(php.array_any(object, (_value, key) => typeof key !== 'string')).toBe(false);
+    expect(php.array_any(object, (value) => php.strlen(value) > 5)).toBe(true);
+    expect(php.array_any(object, (value) => php.strlen(value) < 3)).toBe(false);
+    expect(php.array_any(object, (_, key) => typeof key !== 'string')).toBe(false);
 });
 
 test('array_combine', () => {
@@ -58,9 +58,9 @@ test('array_combine', () => {
 });
 
 test('array_filter', () => {
-    expect(php.array_filter([1, 2, 3, 4, 5], (v: number): boolean => v % 2 !== 0)).toEqual([1, 3, 5]);
+    expect(php.array_filter([1, 2, 3, 4, 5], (v) => v % 2 !== 0)).toEqual([1, 3, 5]);
     expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
-    expect(php.array_filter({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (v: number): boolean => v % 2 !== 0)).toEqual({
+    expect(php.array_filter({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (v) => v % 2 !== 0)).toEqual({
         1: 1,
         3: 3,
         5: 5,
@@ -75,29 +75,17 @@ test('array_filter', () => {
 test('array_find_key', () => {
     const arr = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
 
-    expect(Number(php.array_find_key(arr, (value: string, _key: string | number) => php.strlen(value) > 4))).toBe(4);
-    expect(php.array_find_key(arr, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
-        null,
-    );
-    expect(php.array_find_key(arr, (value: string, key: string | number) => value[0] === key)).toBe(null);
-    expect(
-        Number(
-            php.array_find_key(arr, (_value: string, key: string | number) =>
-                php.preg_match('/^([a-f])$/', String(key)),
-            ),
-        ),
-    ).toBe(0);
+    expect(Number(php.array_find_key(arr, (value) => php.strlen(value) > 4))).toBe(4);
+    expect(php.array_find_key(arr, (value) => php.str_starts_with(value, 'f'))).toBe(null);
+    expect(php.array_find_key(arr, (value, key) => value[0] === key)).toBe(null);
+    expect(Number(php.array_find_key(arr, (_, key) => php.preg_match('/^([a-f])$/', String(key))))).toBe(0);
 
     const obj = { a: 'dog', b: 'cat', c: 'cow', d: 'duck', e: 'goose', f: 'elephant' };
 
-    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.strlen(value) > 4)).toBe('e');
-    expect(php.array_find_key(obj, (value: string, _key: string | number) => php.str_starts_with(value, 'f'))).toBe(
-        null,
-    );
-    expect(php.array_find_key(obj, (value: string, key: string | number) => value[0] === key)).toBe('c');
-    expect(
-        php.array_find_key(obj, (_value: string, key: string | number) => php.preg_match('/^([a-f])$/', String(key))),
-    ).toBe('a');
+    expect(php.array_find_key(obj, (value) => php.strlen(value) > 4)).toBe('e');
+    expect(php.array_find_key(obj, (value) => php.str_starts_with(value, 'f'))).toBe(null);
+    expect(php.array_find_key(obj, (value, key) => value[0] === key)).toBe('c');
+    expect(php.array_find_key(obj, (_, key) => php.preg_match('/^([a-f])$/', String(key)))).toBe('a');
 });
 
 test('array_first', () => {
@@ -117,7 +105,6 @@ test('array_intersect_key', () => {
         'green',
         'purple',
     ]);
-
     expect(
         php.array_intersect_key({ blue: 1, red: 2, green: 3, purple: 4 }, { green: 5, blue: 6, yellow: 7, cyan: 8 }),
     ).toEqual({ blue: 1, green: 3 });
@@ -156,15 +143,14 @@ test('array_map', () => {
     const b = ['uno', 'dos', 'tres', 'cuatro', 'cinco'];
     const c = ['one', 'two', 'three', 'four', 'five'];
 
-    expect(php.array_map((n: number): number => n * n * n, a)).toEqual([1, 8, 27, 64, 125]);
-    expect(php.array_map((n: number, m: string): string => `The number ${n} is called ${m} in Spanish`, a, b)).toEqual([
+    expect(php.array_map((n) => n * n * n, a)).toEqual([1, 8, 27, 64, 125]);
+    expect(php.array_map((n, m) => `The number ${n} is called ${m} in Spanish`, a, b)).toEqual([
         'The number 1 is called uno in Spanish',
         'The number 2 is called dos in Spanish',
         'The number 3 is called tres in Spanish',
         'The number 4 is called cuatro in Spanish',
         'The number 5 is called cinco in Spanish',
     ]);
-
     expect(php.array_map(undefined, a, c, b)).toEqual([
         [1, 'one', 'uno'],
         [2, 'two', 'dos'],
@@ -177,15 +163,14 @@ test('array_map', () => {
     const e = { 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco' };
     const f = { 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five' };
 
-    expect(php.array_map((n: number): number => n * n * n, d)).toEqual({ 1: 1, 2: 8, 3: 27, 4: 64, 5: 125 });
-    expect(php.array_map((n: number, m: string): string => `The number ${n} is called ${m} in Spanish`, d, e)).toEqual({
+    expect(php.array_map((n) => n * n * n, d)).toEqual({ 1: 1, 2: 8, 3: 27, 4: 64, 5: 125 });
+    expect(php.array_map((n, m) => `The number ${n} is called ${m} in Spanish`, d, e)).toEqual({
         1: 'The number 1 is called uno in Spanish',
         2: 'The number 2 is called dos in Spanish',
         3: 'The number 3 is called tres in Spanish',
         4: 'The number 4 is called cuatro in Spanish',
         5: 'The number 5 is called cinco in Spanish',
     });
-
     expect(php.array_map(undefined, d, f, e)).toEqual({
         1: [1, 'one', 'uno'],
         2: [2, 'two', 'dos'],
@@ -358,6 +343,22 @@ test('count', () => {
             ['carrot', 'collard', 'pea'],
         ]),
     ).toBe(2);
+    expect(php.count({ 0: 1, 1: 3, 2: 5 })).toBe(3);
+    expect(
+        php.count(
+            {
+                0: ['orange', 'banana', 'apple'],
+                1: ['carrot', 'collard', 'pea'],
+            },
+            php.COUNT_RECURSIVE,
+        ),
+    ).toBe(8);
+    expect(
+        php.count({
+            0: ['orange', 'banana', 'apple'],
+            1: ['carrot', 'collard', 'pea'],
+        }),
+    ).toBe(2);
 });
 
 test('dirname', () => {
@@ -397,44 +398,12 @@ test('hash', async () => {
 });
 
 test('http_build_query', () => {
-    expect(php.http_build_query({ foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' })).toBe(
-        'foo=bar&baz=boom&cow=milk&php=hypertext+processor',
-    );
-
-    expect(
-        php.http_build_query(
-            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
-            '',
-            '&amp;',
-        ),
-    ).toBe('foo=bar&amp;baz=boom&amp;cow=milk&amp;php=hypertext+processor');
-
     expect(php.http_build_query(['foo', 'bar', 'baz', null, 'boom', 'milk', 'hypertext processor'])).toBe(
         '0=foo&1=bar&2=baz&4=boom&5=milk&6=hypertext+processor',
     );
-
     expect(php.http_build_query(['foo', 'bar', 'baz', null, 'boom', 'milk', 'hypertext processor'], 'myvar_')).toBe(
         'myvar_0=foo&myvar_1=bar&myvar_2=baz&myvar_4=boom&myvar_5=milk&myvar_6=hypertext+processor',
     );
-
-    expect(
-        php.http_build_query(
-            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
-            undefined,
-            undefined,
-            php.PHP_QUERY_RFC3986,
-        ),
-    ).toBe('foo=bar&baz=boom&cow=milk&php=hypertext%20processor');
-
-    expect(
-        php.http_build_query(
-            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
-            '',
-            '&amp;',
-            php.PHP_QUERY_RFC3986,
-        ),
-    ).toBe('foo=bar&amp;baz=boom&amp;cow=milk&amp;php=hypertext%20processor');
-
     expect(
         php.http_build_query(
             ['foo', 'bar', 'baz', null, 'boom', 'milk', 'hypertext processor'],
@@ -443,7 +412,6 @@ test('http_build_query', () => {
             php.PHP_QUERY_RFC3986,
         ),
     ).toBe('0=foo&1=bar&2=baz&4=boom&5=milk&6=hypertext%20processor');
-
     expect(
         php.http_build_query(
             ['foo', 'bar', 'baz', null, 'boom', 'milk', 'hypertext processor'],
@@ -452,6 +420,32 @@ test('http_build_query', () => {
             php.PHP_QUERY_RFC3986,
         ),
     ).toBe('myvar_0=foo&myvar_1=bar&myvar_2=baz&myvar_4=boom&myvar_5=milk&myvar_6=hypertext%20processor');
+    expect(php.http_build_query({ foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' })).toBe(
+        'foo=bar&baz=boom&cow=milk&php=hypertext+processor',
+    );
+    expect(
+        php.http_build_query(
+            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
+            '',
+            '&amp;',
+        ),
+    ).toBe('foo=bar&amp;baz=boom&amp;cow=milk&amp;php=hypertext+processor');
+    expect(
+        php.http_build_query(
+            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
+            undefined,
+            undefined,
+            php.PHP_QUERY_RFC3986,
+        ),
+    ).toBe('foo=bar&baz=boom&cow=milk&php=hypertext%20processor');
+    expect(
+        php.http_build_query(
+            { foo: 'bar', baz: 'boom', cow: 'milk', null: null, php: 'hypertext processor' },
+            '',
+            '&amp;',
+            php.PHP_QUERY_RFC3986,
+        ),
+    ).toBe('foo=bar&amp;baz=boom&amp;cow=milk&amp;php=hypertext%20processor');
 });
 
 test('implode', () => {
@@ -465,6 +459,10 @@ test('in_array', () => {
     expect(php.in_array('mac', ['Mac', 'NT', 'Irix', 'Linux'])).toBe(false);
     expect(php.in_array('12.4', ['1.10', 12.4, 1.13], true)).toBe(false);
     expect(php.in_array(1.13, ['1.10', 12.4, 1.13], true)).toBe(true);
+    expect(php.in_array('Irix', { 0: 'Mac', 1: 'NT', 2: 'Irix', 3: 'Linux' })).toBe(true);
+    expect(php.in_array('mac', { 0: 'Mac', 1: 'NT', 2: 'Irix', 3: 'Linux' })).toBe(false);
+    expect(php.in_array('12.4', { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(false);
+    expect(php.in_array(1.13, { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(true);
 });
 
 test('isset', () => {
@@ -592,14 +590,14 @@ test('preg_match', () => {
     expect(php.preg_match('/php/i', 'PHP is the web scripting language of choice.')).toBe(true);
     expect(php.preg_match('/\\bweb\\b/i', 'PHP is the web scripting language of choice.')).toBe(true);
 
-    let matches: string[] = [];
+    let matches = [];
 
     expect(php.preg_match('/^(?:http://)?([^/]+)/i', 'http://www.php.net/index.html', matches)).toBe(true);
     expect(matches).toEqual(['http://www.php.net', 'www.php.net']);
 });
 
 test('preg_match_all', () => {
-    let phones: string[][] = [];
+    let phones = [];
 
     expect(php.preg_match_all('/(\\d{1}-)?(\\d{3}-)?\\d{3}-\\d{4}/', 'Call 555-1212 or 1-800-555-1212', phones)).toBe(
         2,
@@ -607,7 +605,7 @@ test('preg_match_all', () => {
 
     expect(phones[0]).toEqual(['555-1212', '1-800-555-1212']);
 
-    let matches: string[][] = [];
+    let matches = [];
 
     expect(
         php.preg_match_all(

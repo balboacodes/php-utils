@@ -13,7 +13,7 @@ export function array_all<T>(
     callback: (value: T, key: string | number) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
-        if (!callback(value as T, key)) {
+        if (!callback(value, key)) {
             return false;
         }
     }
@@ -29,7 +29,7 @@ export function array_any<T>(
     callback: (value: T, key: string | number) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
-        if (callback(value as T, key)) {
+        if (callback(value, key)) {
             return true;
         }
     }
@@ -39,6 +39,7 @@ export function array_any<T>(
 
 /**
  * @link https://www.php.net/manual/en/function.array-combine.php
+ * @throws If both parameters don't have equal number of elements.
  */
 export function array_combine<T>(keys: (string | number)[], values: T[]): Record<string, T> {
     if (keys.length !== values.length) {
@@ -91,7 +92,7 @@ export function array_filter<T>(
                 default:
                     return callback(value);
             }
-        }) as any;
+        });
     }
 
     const obj: Record<string, any> = {};
@@ -115,7 +116,7 @@ export function array_filter<T>(
         }
     }
 
-    return obj as any;
+    return obj;
 }
 
 /**
@@ -131,8 +132,8 @@ export function array_find_key<T>(
     callback: (value: T, key: string | number) => boolean,
 ): number | string | null {
     for (const [key, value] of Object.entries(array)) {
-        if (callback(value as T, key)) {
-            return Array.isArray(array) ? Number(key) : (key as any);
+        if (callback(value, key)) {
+            return Array.isArray(array) ? Number(key) : key;
         }
     }
 
@@ -148,6 +149,7 @@ export function array_first<T>(array: T[] | Record<string, T>): T | null {
 
 /**
  * @link https://www.php.net/manual/en/function.array-flip.php
+ * @throws If parameter contains values other than strings and numbers.
  */
 export function array_flip<T>(array: T[]): Record<string, number>;
 export function array_flip<T>(array: Record<string, T>): Record<string, string>;
@@ -167,6 +169,7 @@ export function array_flip<T>(array: T[] | Record<string, T>): Record<string, st
 
 /**
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
+ * @throws If less than two parameters are given.
  */
 export function array_intersect_key<T>(array: T[], ...arrays: T[][]): T[];
 export function array_intersect_key<T>(array: Record<string, T>, ...arrays: Record<string, T>[]): Record<string, T>;
@@ -190,7 +193,7 @@ export function array_intersect_key<T>(
         result[key] = value;
     }
 
-    return Array.isArray(array) ? (Object.values(result) as any) : (result as any);
+    return Array.isArray(array) ? Object.values(result) : result;
 }
 
 /**
@@ -207,7 +210,7 @@ export function array_key_first<T>(array: T[] | Record<string, T>): number | str
 
     const firstKey = keys[0];
 
-    return Array.isArray(array) ? Number(firstKey) : (firstKey as any);
+    return Array.isArray(array) ? Number(firstKey) : firstKey;
 }
 
 /**
@@ -224,7 +227,7 @@ export function array_key_last<T>(array: T[] | Record<string, T>): number | stri
 
     const lastKey = keys[keys.length - 1];
 
-    return Array.isArray(array) ? Number(lastKey) : (lastKey as any);
+    return Array.isArray(array) ? Number(lastKey) : lastKey;
 }
 
 /**
@@ -236,11 +239,11 @@ export function array_keys<T>(
     array: T[] | Record<string, T>,
     searchValue?: T,
     strict: boolean = false,
-): number[] | string[] {
+): (number | string)[] {
     const entries = Object.entries(array);
 
     if (searchValue === undefined) {
-        return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k)) as any;
+        return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k));
     }
 
     const result: (string | number)[] = [];
@@ -253,7 +256,7 @@ export function array_keys<T>(
         }
     }
 
-    return result as any;
+    return result;
 }
 
 /**
@@ -336,7 +339,7 @@ export function array_pop<T>(array: T[] | Record<string, T>): T | null {
 
     delete array[last[0]];
 
-    return last[1] as any;
+    return last[1];
 }
 
 /**
@@ -392,7 +395,7 @@ export function array_reduce<TItem, TCarry = TItem>(
             continue;
         }
 
-        carry = callback(carry!, value as TItem);
+        carry = callback(carry!, value);
     }
 
     return started ? carry! : null;
@@ -424,7 +427,7 @@ export function array_reverse<T>(
             }
         });
 
-    return result as any;
+    return result;
 }
 
 /**
@@ -443,7 +446,7 @@ export function array_shift<T>(array: T[] | Record<string, T>): T | null {
 
     delete array[first[0]];
 
-    return first[1] as any;
+    return first[1];
 }
 
 /**
@@ -626,16 +629,21 @@ export const COUNT_RECURSIVE = 1;
 /**
  * @link https://php.net/manual/en/function.count.php
  */
-export function count(value: any[], mode: typeof COUNT_NORMAL | typeof COUNT_RECURSIVE = COUNT_NORMAL): number {
+export function count<T>(
+    value: T[] | Record<string, T>,
+    mode: typeof COUNT_NORMAL | typeof COUNT_RECURSIVE = COUNT_NORMAL,
+): number {
     if (mode === COUNT_RECURSIVE) {
-        return value.reduce((total: number, item) => {
+        return Object.values(value).reduce((total, item) => {
             total += 1;
 
-            return Array.isArray(item) ? total + count(item, COUNT_RECURSIVE) : total;
+            const isIterable = Array.isArray(item) || (typeof item === 'object' && typeof item !== null);
+
+            return isIterable ? total + count(item as any, COUNT_RECURSIVE) : total;
         }, 0);
     }
 
-    return value.length;
+    return Object.values(value).length;
 }
 
 /**
@@ -736,6 +744,7 @@ export function empty(value: any): boolean {
 
 /**
  * @link https://php.net/manual/en/function.explode.php
+ * @throws If separator is an empty string.
  */
 export function explode(separator: string, string: string, limit: number = Number.MAX_SAFE_INTEGER): string[] {
     if (separator === '') {
@@ -858,14 +867,12 @@ export function filter_var(
 }
 
 /**
- * options is not used.
  * @link https://php.net/manual/en/function.hash.php
  */
 export async function hash(
     algo: 'SHA-1' | 'SHA-256' | 'SHA-512',
     data: string,
     binary: boolean = false,
-    _options: any[] = [],
 ): Promise<string> {
     // Compute hash.
     let digest: Buffer | ArrayBuffer;
@@ -911,8 +918,8 @@ export const PHP_QUERY_RFC3986 = 2;
 /**
  * @link https://www.php.net/manual/en/function.http-build-query.php
  */
-export function http_build_query(
-    data: { [key: string]: any } | any[],
+export function http_build_query<T>(
+    data: T[] | Record<string, T>,
     numericPrefix: string = '',
     argSeparator: string = '&',
     encodingType: number = PHP_QUERY_RFC1738,
@@ -969,15 +976,17 @@ export function http_build_query(
 /**
  * @link https://php.net/manual/en/function.implode.php
  */
-export function implode(separator: string = '', array: any[]): string {
-    return array.map((v) => phpParseString(v)).join(separator);
+export function implode<T>(separator: string = '', array: T[] | Record<string, T>): string {
+    return Object.values(array)
+        .map((v) => phpParseString(v))
+        .join(separator);
 }
 
 /**
  * @link https://php.net/manual/en/function.in-array.php
  */
-export function in_array(needle: any, haystack: any[], strict: boolean = false): boolean {
-    for (const value of haystack) {
+export function in_array<T>(needle: any, haystack: T[] | Record<string, T>, strict: boolean = false): boolean {
+    for (const value of Object.values(haystack)) {
         if (strict) {
             if (needle === value) {
                 return true;
@@ -1054,13 +1063,11 @@ export const MB_CASE_LOWER = 1;
 export const MB_CASE_TITLE = 2;
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-convert-case.php
  */
 export function mb_convert_case(
     string: string,
     mode: typeof MB_CASE_UPPER | typeof MB_CASE_LOWER | typeof MB_CASE_TITLE,
-    _encoding?: string,
 ): string {
     switch (mode) {
         case MB_CASE_UPPER:
@@ -1121,7 +1128,6 @@ export function mb_split(pattern: string, string: string, limit: number = -1): s
 }
 
 /**
- * encoding is assumed to be UTF-8.
  * @link https://www.php.net/manual/en/function.mb-str-pad.php
  */
 export function mb_str_pad(
@@ -1129,7 +1135,6 @@ export function mb_str_pad(
     length: number,
     padString: string = ' ',
     padType: typeof STR_PAD_LEFT | typeof STR_PAD_RIGHT | typeof STR_PAD_BOTH = STR_PAD_RIGHT,
-    _encoding?: string,
 ): string {
     const inputLength = mb_strlen(string);
     const padStrLen = mb_strlen(padString);
@@ -1171,10 +1176,9 @@ export function mb_str_pad(
 }
 
 /**
- * encoding is not used.
  * @link https://www.php.net/manual/en/function.mb-str-split.php
  */
-export function mb_str_split(string: string, length: number = 1, _encoding?: string): string[] {
+export function mb_str_split(string: string, length: number = 1): string[] {
     if (length < 1) {
         length = 1;
     }
@@ -1193,16 +1197,9 @@ export function mb_str_split(string: string, length: number = 1, _encoding?: str
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strimwidth.php
  */
-export function mb_strimwidth(
-    string: string,
-    start: number,
-    width: number,
-    trimMarker: string = '',
-    _encoding?: string,
-): string {
+export function mb_strimwidth(string: string, start: number, width: number, trimMarker: string = ''): string {
     if (width <= 0) {
         return '';
     }
@@ -1268,10 +1265,9 @@ export function mb_strimwidth(
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strlen.php
  */
-export function mb_strlen(string: string, _encoding?: string): number {
+export function mb_strlen(string: string): number {
     // Count Unicode code points (not bytes).
     let count = 0;
 
@@ -1287,10 +1283,9 @@ export const STR_PAD_RIGHT = 1;
 export const STR_PAD_BOTH = 2;
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strpos.php
  */
-export function mb_strpos(haystack: string, needle: string, offset: number = 0, _encoding?: string): number | false {
+export function mb_strpos(haystack: string, needle: string, offset: number = 0): number | false {
     if (needle === '') {
         return false;
     }
@@ -1332,10 +1327,9 @@ export function mb_strpos(haystack: string, needle: string, offset: number = 0, 
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strrpos.php
  */
-export function mb_strrpos(haystack: string, needle: string, offset: number = 0, _encoding?: string): number | false {
+export function mb_strrpos(haystack: string, needle: string, offset: number = 0): number | false {
     if (needle === '') {
         return false;
     }
@@ -1373,29 +1367,26 @@ export function mb_strrpos(haystack: string, needle: string, offset: number = 0,
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strtolower.php
  */
-export function mb_strtolower(string: string, _encoding?: string): string {
+export function mb_strtolower(string: string): string {
     // Multibyte-safe lowercase. 'und' = Unicode locale-insensitive lowercase.
     return string.toLocaleLowerCase('und');
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strtoupper.php
  */
-export function mb_strtoupper(string: string, _encoding?: string): string {
+export function mb_strtoupper(string: string): string {
     // Perform Unicode-aware uppercase conversion. JavaScript's .toUpperCase() is Unicode-compliant, matching PHP
     // mb_strtoupper() for UTF-8. "und" = undefined locale, generic Unicode behavior.
     return string.toLocaleUpperCase('und');
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-strwidth.php
  */
-export function mb_strwidth(string: string, _encoding?: string): number {
+export function mb_strwidth(string: string): number {
     let width = 0;
 
     for (const char of [...string]) {
@@ -1433,10 +1424,9 @@ export function mb_strwidth(string: string, _encoding?: string): number {
 }
 
 /**
- * encoding is not used.
  * @link https://php.net/manual/en/function.mb-substr.php
  */
-export function mb_substr(string: string, start: number, length?: number, _encoding?: string): string {
+export function mb_substr(string: string, start: number, length?: number): string {
     // Convert to array of code points (multibyte safe).
     const chars = Array.from(string);
     const len = chars.length;
@@ -1463,17 +1453,11 @@ export function mb_substr(string: string, start: number, length?: number, _encod
 }
 
 /**
- * flags and offset are not used. PHP returns 1 if the pattern matches given subject, 0 if it does not, or false if an
+ * PHP returns 1 if the pattern matches given subject, 0 if it does not, or false if an
  * error occurred. We are just returning a boolean instead.
  * @link https://php.net/manual/en/function.preg-match.php
  */
-export function preg_match(
-    pattern: string,
-    subject: string,
-    matches?: string[],
-    _flags: number = 0,
-    _offset: number = 0,
-): boolean {
+export function preg_match(pattern: string, subject: string, matches?: string[]): boolean {
     try {
         // Parse PHP-style pattern: e.g. '/abc/i'.
         const match = pattern.match(/^(.)(.*)\1([a-z]*)$/i);
@@ -1551,6 +1535,8 @@ export function preg_match_all(
     const results: RegExpExecArray[] = [];
     let result: RegExpExecArray | null;
 
+    // Exec returns an array and resets index if match is found, allowing us to continue to loop while matches are
+    // found.
     while ((result = regex.exec(subject)) !== null) {
         results.push(result);
 
@@ -1632,6 +1618,20 @@ export function preg_quote(str: string, delimiter?: string): string {
 /**
  * @link https://php.net/manual/en/function.preg-replace.php
  */
+export function preg_replace(
+    pattern: string | string[],
+    replacement: string | string[],
+    subject: string,
+    limit?: number,
+    count?: { value: number },
+): string | null;
+export function preg_replace(
+    pattern: string | string[],
+    replacement: string | string[],
+    subject: string[],
+    limit?: number,
+    count?: { value: number },
+): string[] | null;
 export function preg_replace(
     pattern: string | string[],
     replacement: string | string[],
@@ -1725,16 +1725,28 @@ export function preg_replace(
 }
 
 /**
- * flags is not used.
  * @link https://php.net/manual/en/function.preg-replace-callback.php
  */
+export function preg_replace_callback(
+    pattern: string | string[],
+    callback: (matches: string[]) => string,
+    subject: string,
+    limit?: number,
+    count?: { value: number },
+): string | null;
+export function preg_replace_callback(
+    pattern: string | string[],
+    callback: (matches: string[]) => string,
+    subject: string[],
+    limit?: number,
+    count?: { value: number },
+): string[] | null;
 export function preg_replace_callback(
     pattern: string | string[],
     callback: (matches: string[]) => string,
     subject: string | string[],
     limit: number = -1,
     count?: { value: number },
-    _flags: number = 0,
 ): string | string[] | null {
     // Normalize parameters.
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
@@ -1748,7 +1760,7 @@ export function preg_replace_callback(
         for (const pat of patterns) {
             const regex = patternToRegExp(pat);
 
-            // Invalid regex => null (PHP behavior).
+            // Invalid regex => null.
             if (!regex) {
                 return null;
             }
@@ -1811,24 +1823,18 @@ export const PREG_SPLIT_OFFSET_CAPTURE = 4;
 /**
  * @link https://php.net/manual/en/function.preg-split.php
  */
-export function preg_split<
-    T extends (
-        | typeof PREG_SPLIT_NO_EMPTY
-        | typeof PREG_SPLIT_DELIM_CAPTURE
-        | typeof PREG_SPLIT_OFFSET_CAPTURE
-        | 0
-    )[] = [0],
->(
+export function preg_split(
     pattern: string,
     subject: string,
     limit: number = -1,
-    flags?: T,
-): T extends (typeof PREG_SPLIT_OFFSET_CAPTURE)[] ? (string | number)[][] : string[] {
-    const actualFlags = flags === undefined ? [0] : flags;
+    flags: (typeof PREG_SPLIT_NO_EMPTY | typeof PREG_SPLIT_DELIM_CAPTURE | typeof PREG_SPLIT_OFFSET_CAPTURE | 0)[] = [
+        0,
+    ],
+): (string | number)[][] | string[] {
     const parsed = patternToRegExp(pattern);
 
     if (!parsed) {
-        return [subject] as any;
+        return [subject];
     }
 
     const result: (string | (string | number)[])[] = [];
@@ -1842,12 +1848,12 @@ export function preg_split<
         // Piece BEFORE the match (from lastIndex up to start).
         const piece = subject.slice(lastIndex, start);
 
-        if (!in_array(PREG_SPLIT_NO_EMPTY, actualFlags) || piece.length > 0) {
-            result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, actualFlags) ? [piece, lastIndex] : piece);
+        if (!in_array(PREG_SPLIT_NO_EMPTY, flags) || piece.length > 0) {
+            result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, flags) ? [piece, lastIndex] : piece);
         }
 
         // Include capture groups if requested.
-        if (in_array(PREG_SPLIT_DELIM_CAPTURE, actualFlags) && match.length > 1) {
+        if (in_array(PREG_SPLIT_DELIM_CAPTURE, flags) && match.length > 1) {
             const groups: { offset?: number; value: string }[] = [];
 
             if (match.groups) {
@@ -1864,7 +1870,7 @@ export function preg_split<
 
             for (const { offset, value } of groups) {
                 if (value !== undefined && value !== null) {
-                    result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, actualFlags) ? [value, offset ?? start] : value);
+                    result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, flags) ? [value, offset ?? start] : value);
                 }
             }
         }
@@ -1906,16 +1912,16 @@ export function preg_split<
     // Add remaining tail.
     const tail = subject.slice(lastIndex);
 
-    if (!in_array(PREG_SPLIT_NO_EMPTY, actualFlags) || tail.length > 0) {
-        result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, actualFlags) ? [tail, lastIndex] : tail);
+    if (!in_array(PREG_SPLIT_NO_EMPTY, flags) || tail.length > 0) {
+        result.push(in_array(PREG_SPLIT_OFFSET_CAPTURE, flags) ? [tail, lastIndex] : tail);
     }
 
     return result as any;
 }
 
 /**
- * @throws If an appropriate source of randomness cannot be found.
  * @link https://php.net/manual/en/function.random-bytes.php
+ * @throws If length is not finite or is less than 1.
  */
 export function random_bytes(length: number): string {
     // Step 1: Validate length (must be integer >= 1).
@@ -1947,8 +1953,8 @@ export function random_bytes(length: number): string {
 }
 
 /**
- * @throws If an appropriate source of randomness cannot be found.
  * @link https://php.net/manual/en/function.random-int.php
+ * @throws If parameters are not integers or if min is greater than max.
  */
 export function random_int(min: number, max: number): number {
     if (!Number.isInteger(min) || !Number.isInteger(max)) {
@@ -2125,10 +2131,9 @@ export function sort<T>(
 }
 
 /**
- * vars is not used.
  * @link https://php.net/manual/en/function.sscanf.php
  */
-export function sscanf(string: string, format: string, ..._vars: any[]): any[] | null {
+export function sscanf(string: string, format: string): any[] | null {
     const converters: ((v: string) => string | number)[] = [];
     let regexStr = '';
     let i = 0;
@@ -2223,12 +2228,24 @@ export function str_ends_with(haystack: string, needle: string): boolean {
 /**
  * @link https://php.net/manual/en/function.str-ireplace.php
  */
-export function str_ireplace<T extends string | string[]>(
+export function str_ireplace(
     search: string | string[],
     replace: string | string[],
-    subject: T,
+    subject: string,
     count?: { value: number },
-): T extends string ? string : string[] {
+): string;
+export function str_ireplace(
+    search: string | string[],
+    replace: string | string[],
+    subject: string[],
+    count?: { value: number },
+): string[];
+export function str_ireplace(
+    search: string | string[],
+    replace: string | string[],
+    subject: string | string[],
+    count?: { value: number },
+): string | string[] {
     let totalCount = 0;
 
     // Convert to arrays for uniform handling.
@@ -2267,9 +2284,7 @@ export function str_ireplace<T extends string | string[]>(
     }
 
     // If subject is an array return array of replaced elements.
-    return Array.isArray(subject)
-        ? (subject.map((subj) => replaceInString(subj)) as any)
-        : (replaceInString(subject) as any);
+    return Array.isArray(subject) ? subject.map((subj) => replaceInString(subj)) : replaceInString(subject);
 }
 
 /**
@@ -2285,29 +2300,41 @@ export function str_repeat(string: string, times: number): string {
 /**
  * @link https://php.net/manual/en/function.str-replace.php
  */
-export function str_replace<T extends string | string[]>(
+export function str_replace(
     search: string | string[],
     replace: string | string[],
-    subject: T,
+    subject: string,
     count?: { value: number },
-): T extends string ? string : string[] {
+): string;
+export function str_replace(
+    search: string | string[],
+    replace: string | string[],
+    subject: string[],
+    count?: { value: number },
+): string[];
+export function str_replace(
+    search: string | string[],
+    replace: string | string[],
+    subject: string | string[],
+    count?: { value: number },
+): string | string[] {
     let replaced = 0;
 
     // Recursive array handling (subject).
     if (Array.isArray(subject)) {
-        const result = subject.map((s) => str_replace(search, replace, s, count) as string);
+        const result = subject.map((s) => str_replace(search, replace, s, count));
 
         if (count) {
             count.value = (count.value || 0) + replaced;
         }
 
-        return result as any;
+        return result;
     }
 
     // Normalize search/replace to arrays.
     const searchArr = Array.isArray(search) ? search : [search];
     const replaceArr = Array.isArray(replace) ? replace : [replace];
-    let result = subject as string;
+    let result = subject;
 
     for (let i = 0; i < searchArr.length; i++) {
         const s = searchArr[i];
@@ -2328,7 +2355,7 @@ export function str_replace<T extends string | string[]>(
         count.value = (count.value || 0) + replaced;
     }
 
-    return result as any;
+    return result;
 }
 
 /**
@@ -2346,11 +2373,14 @@ export function str_starts_with(haystack: string, needle: string): boolean {
  * actual word itself
  * @link https://php.net/manual/en/function.str-word-count.php
  */
-export function str_word_count<T extends 0 | 1 | 2 = 0>(
+export function str_word_count(string: string, format?: 0, characters?: string): number;
+export function str_word_count(string: string, format?: 1, characters?: string): string[];
+export function str_word_count(string: string, format?: 2, characters?: string): Record<string, string>;
+export function str_word_count(
     string: string,
-    format?: T,
+    format?: 0 | 1 | 2,
     characters?: string,
-): T extends 0 ? number : T extends 1 ? string[] : { [key: number]: string } {
+): number | string[] | Record<string, string> {
     const actualFormat = format === undefined ? 0 : format;
 
     // Default PHP pattern: ASCII letters only.
@@ -2371,20 +2401,20 @@ export function str_word_count<T extends 0 | 1 | 2 = 0>(
     }
 
     if (actualFormat === 0) {
-        return words.length as any;
+        return words.length;
     }
 
     if (actualFormat === 1) {
-        return words.map((w) => w.word) as any;
+        return words.map((w) => w.word);
     }
 
-    const out: { [key: number]: string } = {};
+    const out: Record<string, string> = {};
 
     for (const w of words) {
         out[w.index] = w.word;
     }
 
-    return out as any;
+    return out;
 }
 
 /**
@@ -2511,13 +2541,13 @@ export function strstr(haystack: string, needle: string, beforeNeedle: boolean =
 }
 
 /**
- * @throws If from is a string and to is undefined.
  * @link https://php.net/manual/en/function.strtr.php
+ * @throws If from is a string and to is undefined.
  */
-export function strtr(string: string, from: string | { [key: string]: string }, to?: string): string {
+export function strtr(string: string, from: string | Record<string, string>, to?: string): string {
     // 2-argument mode: object mapping.
     if (typeof from === 'object') {
-        const map = from as { [key: string]: string };
+        const map = from;
         // Longest keys first.
         const keys = Object.keys(map).sort((a, b) => b.length - a.length);
         let result = string;
@@ -2615,7 +2645,6 @@ export function substr(string: string, offset: number, length?: number): string 
     // returns possibly broken UTF-8 strings, we must decode with 'utf-8' but ignore errors — TextDecoder has 'fatal'
     // option. Unfortunately TextDecoder throws on invalid sequences by default. So to mimic PHP, decode normally (it
     // may replace invalid sequences with �).
-
     return new TextDecoder('utf-8', { fatal: false }).decode(sliced);
 }
 
@@ -2677,6 +2706,18 @@ export function substr_count(haystack: string, needle: string, offset: number = 
 /**
  * @link https://php.net/manual/en/function.substr-replace.php
  */
+export function substr_replace(
+    string: string,
+    replace: string | string[],
+    offset: number | number[],
+    length?: number | number[],
+): string;
+export function substr_replace(
+    string: string[],
+    replace: string | string[],
+    offset: number | number[],
+    length?: number | number[],
+): string[];
 export function substr_replace(
     string: string | string[],
     replace: string | string[],
@@ -2748,7 +2789,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
  *
  * Variables cannot be unset in JS, so we will only accept an array or object and key.
  */
-export function unset<T>(array: Record<string, T> | T[], key: string | number): void {
+export function unset<T>(array: T[] | Record<string, T>, key: string | number): void {
     // Remove the key/property if it exists (silent if not)
     if (Array.isArray(array)) {
         array.splice(Number(key), 1);
