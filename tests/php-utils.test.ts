@@ -693,17 +693,29 @@ test('random_int', () => {
 });
 
 test('rsort', () => {
-    const array = ['lemon', 'orange', 'banana', 'apple'];
+    let array: any = ['lemon', 'orange', 'banana', 'apple'];
 
     php.rsort(array);
 
     expect(array).toEqual(['orange', 'lemon', 'banana', 'apple']);
 
-    const fruits = ['Orange1', 'orange2', 'Orange3', 'orange20'];
+    let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
     php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
 
     expect(fruits).toEqual(['orange20', 'Orange3', 'orange2', 'Orange1']);
+
+    array = { 0: 'lemon', 1: 'orange', 2: 'banana', 3: 'apple' };
+
+    php.rsort(array);
+
+    expect(array).toEqual({ 0: 'orange', 1: 'lemon', 2: 'banana', 3: 'apple' });
+
+    fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
+
+    php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+
+    expect(fruits).toEqual({ 0: 'orange20', 1: 'Orange3', 2: 'orange2', 3: 'Orange1' });
 });
 
 test('rtrim', () => {
@@ -714,17 +726,29 @@ test('rtrim', () => {
 });
 
 test('sort', () => {
-    const array = ['lemon', 'orange', 'banana', 'apple'];
+    let array: any = ['lemon', 'orange', 'banana', 'apple'];
 
     php.sort(array);
 
     expect(array).toEqual(['apple', 'banana', 'lemon', 'orange']);
 
-    const fruits = ['Orange1', 'orange2', 'Orange3', 'orange20'];
+    let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
     php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
 
     expect(fruits).toEqual(['Orange1', 'orange2', 'Orange3', 'orange20']);
+
+    array = { 0: 'lemon', 1: 'orange', 2: 'banana', 3: 'apple' };
+
+    php.sort(array);
+
+    expect(array).toEqual({ 0: 'apple', 1: 'banana', 2: 'lemon', 3: 'orange' });
+
+    fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
+
+    php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+
+    expect(fruits).toEqual({ 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' });
 });
 
 test('sscanf', () => {
