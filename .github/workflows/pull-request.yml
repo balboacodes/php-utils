@@ -26,7 +26,3 @@ jobs:
 
             - name: Format
               run: npm run format
-
-            - uses: autofix-ci/action@v1
-              with:
-                  commit-message: 'ci: apply formatting'
