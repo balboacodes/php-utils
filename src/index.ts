@@ -13,7 +13,7 @@ export function array_all<T>(
     callback: (value: T, key: string | number) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
-        if (!callback(value, key)) {
+        if (!callback(value, Array.isArray(array) ? Number(key) : key)) {
             return false;
         }
     }
@@ -289,14 +289,14 @@ export function array_map<TItem extends unknown[], TReturn = any>(
     const isObject = !Array.isArray(first);
 
     const keys = Object.keys(first);
-    const result: any = isObject ? {} : [];
+    const result: TReturn[] | Record<string, TReturn> = isObject ? {} : [];
 
     for (let key of keys) {
         key = isObject ? key : (Number(key) as any);
         const args = arrays.map((arr) => (arr as any)[key]);
 
         // Undefined callback: return zipped arrays (PHP behavior)
-        result[key] = callback ? callback(...(args as any)) : args;
+        (result as any)[key] = callback ? callback(...(args as any)) : args;
     }
 
     return result;
@@ -305,7 +305,7 @@ export function array_map<TItem extends unknown[], TReturn = any>(
 /**
  * @link https://www.php.net/manual/en/function.array-merge.php
  */
-export function array_merge<T>(...arrays: (T[] | Record<string, T>)[]): Record<string, T> {
+export function array_merge<T>(...arrays: (T[] | Record<string, T>)[]): T[] | Record<string, T> {
     const result: Record<string, T> = {};
     let numericIndex = 0;
 
@@ -320,7 +320,7 @@ export function array_merge<T>(...arrays: (T[] | Record<string, T>)[]): Record<s
         }
     }
 
-    return result;
+    return Array.isArray(array_first(arrays)) ? (Object.values(result) as any) : result;
 }
 
 /**
@@ -2789,7 +2789,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
  *
  * Variables cannot be unset in JS, so we will only accept an array or object and key.
  */
-export function unset<T>(array: T[] | Record<string, T>, key: string | number): void {
+export function unset<T>(array: T[] | Record<string, T>, key: number | string): void {
     // Remove the key/property if it exists (silent if not)
     if (Array.isArray(array)) {
         array.splice(Number(key), 1);

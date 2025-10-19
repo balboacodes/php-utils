@@ -12,7 +12,7 @@ test('array_all', () => {
 
     expect(php.array_all(array, (value) => php.strlen(value) < 12)).toBe(true);
     expect(php.array_all(array, (value) => php.strlen(value) > 5)).toBe(false);
-    expect(php.array_all(array, (_, key) => typeof key === 'string')).toBe(true);
+    expect(php.array_all(array, (_, key) => typeof key === 'string')).toBe(false);
 
     const object = {
         a: 'dog',
@@ -181,7 +181,18 @@ test('array_map', () => {
 });
 
 test('array_merge', () => {
-    expect(php.array_merge(['red', 2, 4], ['a', 'b', 'green', 'trapezoid', 4])).toEqual({
+    expect(php.array_merge(['red', 2, 4], ['a', 'b', 'green', 'trapezoid', 4])).toEqual([
+        'red',
+        2,
+        4,
+        'a',
+        'b',
+        'green',
+        'trapezoid',
+        4,
+    ]);
+    expect(php.array_merge([], { 1: 'data' })).toEqual(['data']);
+    expect(php.array_merge({ 0: 'red', 1: 2, 2: 4 }, { 0: 'a', 1: 'b', 2: 'green', 3: 'trapezoid', 4: 4 })).toEqual({
         0: 'red',
         1: 2,
         2: 4,
@@ -191,11 +202,10 @@ test('array_merge', () => {
         6: 'trapezoid',
         7: 4,
     });
-    expect(php.array_merge([], { 1: 'data' })).toEqual({ 0: 'data' });
+    expect(php.array_merge({}, { 1: 'data' })).toEqual({ 0: 'data' });
     expect(
         php.array_merge({ color: 'red', 0: 2, 1: 4 }, { 0: 'a', 1: 'b', color: 'green', shape: 'trapezoid', 2: 4 }),
     ).toEqual({ color: 'green', 0: 2, 1: 4, 2: 'a', 3: 'b', shape: 'trapezoid', 4: 4 });
-    expect(php.array_merge({}, { 1: 'data' })).toEqual({ 0: 'data' });
 });
 
 test('array_pop', () => {
