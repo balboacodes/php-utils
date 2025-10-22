@@ -303,9 +303,13 @@ test('array_unshift', () => {
     expect(php.array_unshift(array, 'apple', 'raspberry')).toBe(4);
     expect(array).toEqual(['apple', 'raspberry', 'orange', 'banana']);
 
-    const obj = { 0: 'orange', 1: 'banana' };
+    let obj: any = { 0: 'orange', 1: 'banana' };
     expect(php.array_unshift(obj, 'apple', 'raspberry')).toBe(4);
     expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana' });
+
+    obj = { 0: 'orange', foo: 'bar', 1: 'banana' };
+    expect(php.array_unshift(obj, 'apple', 'raspberry')).toBe(5);
+    expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana', foo: 'bar' });
 });
 
 test('array_values', () => {
@@ -484,6 +488,30 @@ test('isset', () => {
     expect(php.isset([1][1])).toBe(false);
     expect(php.isset({ foo: 'bar' }['foo'])).toBe(true);
     expect(php.isset({ foo: 'bar' }['baz'])).toBe(false);
+});
+
+test('krsort', () => {
+    const fruits = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.krsort(fruits);
+
+    expect(fruits).toEqual({ d: 'lemon', c: 'apple', b: 'banana', a: 'orange' });
+
+    const a = { 0: 'First', 2: 'Last', 1: 'Middle' };
+    php.krsort(a);
+
+    expect(a).toEqual({ 2: 'Last', 1: 'Middle', 0: 'First' });
+});
+
+test('ksort', () => {
+    const fruits = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.ksort(fruits);
+
+    expect(fruits).toEqual({ a: 'orange', b: 'banana', c: 'apple', d: 'lemon' });
+
+    const a = { 0: 'First', 2: 'Last', 1: 'Middle' };
+    php.ksort(a);
+
+    expect(a).toEqual({ 0: 'First', 1: 'Middle', 2: 'Last' });
 });
 
 test('lcfirst', () => {

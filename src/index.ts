@@ -41,17 +41,23 @@ export function array_any(
  * @link https://www.php.net/manual/en/function.array-combine.php
  * @throws If both parameters don't have equal number of elements.
  */
-export function array_combine(keys: (string | number)[], values: any[]): Record<string, any> {
+export function array_combine(
+    keys: (number | string)[] | Record<string, number | string>,
+    values: any[] | Record<string, any>,
+): Record<string, any> {
+    keys = Object.values(keys);
+    values = Object.values(values);
+
     if (keys.length !== values.length) {
         throw new TypeError(
-            `array_combine(): Both parameters should have an equal number of elements (keys=${keys.length}, values=${values.length})`,
+            `array_combine(): Both parameters should have an equal number of elements (keys=${Object.values(keys).length}, values=${Object.values(values).length})`,
         );
     }
 
     const result: Record<string, any> = {};
 
     for (let i = 0; i < keys.length; i++) {
-        result[String(keys[i])] = values[i];
+        result[keys[i]] = (values as any)[i];
     }
 
     return result;
@@ -178,6 +184,21 @@ export function array_intersect_key(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-is-list.php
+ */
+export function array_is_list(array: any[] | Record<string, any>): boolean {
+    const keys = Object.keys(array);
+
+    for (let i = 0; i < keys.length; i++) {
+        if (Number(keys[i]) !== i) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-key-first.php
  */
 export function array_key_first(array: any[] | Record<string, any>): number | string | null {
@@ -249,21 +270,27 @@ export function array_map(
     ...arrays: (any[] | Record<string, any>)[]
 ): any[] | Record<string, any> {
     if (arrays.length === 0) {
-        return [];
+        throw new TypeError('array_map(): Expected at least one array');
     }
 
     const first = arrays[0];
-    const isObject = !Array.isArray(first);
-
     const keys = Object.keys(first);
-    const result: any[] | Record<string, any> = isObject ? {} : [];
+    const result: any[] | Record<string, any> = Array.isArray(first) ? [] : {};
 
-    for (let key of keys) {
-        key = isObject ? key : (Number(key) as any);
-        const args = arrays.map((arr) => (arr as any)[key]);
+    for (let i = 0; i < keys.length; i++) {
+        const args = arrays.map((arr) => {
+            if (Array.isArray(arr)) {
+                // Match by position (PHP behavior)
+                return arr[i];
+            }
 
-        // Undefined callback: return zipped arrays (PHP behavior)
-        (result as any)[key] = callback ? callback(...args) : args;
+            // Match by key for first array
+            const objKeys = Object.keys(arr);
+
+            return (arr as any)[objKeys[i]];
+        });
+
+        (result as any)[keys[i]] = callback ? callback(...args) : args;
     }
 
     return result;
@@ -473,19 +500,20 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
         return array.unshift(...values);
     }
 
-    const objValues = [...values, ...Object.values(array)];
+    const allValues = [...values];
 
     for (const key in array) {
-        if (Object.hasOwn(array, key)) {
+        if (!isNaN(Number(key)) && Object.hasOwn(array, key)) {
+            allValues.push(array[key]);
             delete array[key];
         }
     }
 
-    for (let i = 0; i < objValues.length; i++) {
-        array[i] = objValues[i];
+    for (let i = 0; i < allValues.length; i++) {
+        array[i] = allValues[i];
     }
 
-    return objValues.length;
+    return Object.values(array).length;
 }
 
 /**
@@ -970,6 +998,99 @@ export function isset(...vars: any[]): boolean {
     }
 
     return true;
+}
+
+export const SORT_REGULAR = 0;
+export const SORT_NUMERIC = 1;
+export const SORT_STRING = 2;
+export const SORT_NATURAL = 6;
+export const SORT_FLAG_CASE = 8;
+
+/**
+ * @link https://www.php.net/manual/en/function.krsort.php
+ */
+export function krsort(
+    array: any[] | Record<string, any>,
+    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_REGULAR,
+): true {
+    const sortedEntries = Object.entries(array).sort(([a], [b]) => -compareKeys(a, b, flags));
+
+    if (Array.isArray(array)) {
+        // Mutate the array in place
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+
+        return true;
+    }
+
+    // Clear and rebuild in reverse-sorted order
+    for (const key of Object.keys(array)) {
+        delete array[key];
+    }
+
+    for (const [key, value] of sortedEntries) {
+        array[key] = value;
+    }
+
+    return true;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.ksort.php
+ */
+export function ksort(
+    array: any[] | Record<string, any>,
+    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_REGULAR,
+): true {
+    const sortedEntries = Object.entries(array).sort(([a], [b]) => compareKeys(a, b, flags));
+
+    if (Array.isArray(array)) {
+        // Clear and reassign values in place
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+
+        return true;
+    }
+
+    // Delete all keys, then reassign in sorted order
+    for (const key of Object.keys(array)) {
+        delete array[key];
+    }
+
+    for (const [key, value] of sortedEntries) {
+        array[key] = value;
+    }
+
+    return true;
+}
+
+/**
+ * Compare two keys according to PHP's sort flag logic.
+ */
+function compareKeys(
+    a: string,
+    b: string,
+    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING,
+): number {
+    switch (flags) {
+        case SORT_NUMERIC:
+            return Number(a) - Number(b);
+        case SORT_STRING:
+            return a.localeCompare(b);
+        default:
+            // PHP's default comparison: numeric if both numeric strings, else string
+            const aNum = parseFloat(a);
+            const bNum = parseFloat(b);
+            const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+            return bothNumeric ? aNum - bNum : a.localeCompare(b);
+    }
 }
 
 /**
@@ -1933,12 +2054,6 @@ export function random_int(min: number, max: number): number {
     return min + (rand % (range + 1));
 }
 
-export const SORT_REGULAR = 0;
-export const SORT_NUMERIC = 1;
-export const SORT_STRING = 2;
-export const SORT_NATURAL = 6;
-export const SORT_FLAG_CASE = 8;
-
 /**
  * @link https://www.php.net/manual/en/function.rsort.php
  */
@@ -2021,7 +2136,7 @@ export function sort(
         | typeof SORT_STRING
         | typeof SORT_NATURAL
         | typeof SORT_FLAG_CASE
-    )[] = [SORT_STRING],
+    )[] = [SORT_REGULAR],
 ): true {
     const flagCase = in_array(SORT_FLAG_CASE, flags);
     const numeric = in_array(SORT_NUMERIC, flags);
