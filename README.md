@@ -17,3 +17,7 @@ import { preg_split } from @balboacodes/php-utils;
 
 const parts = preg_split('/[\\s,]+/', 'hypertext language, programming'); // ['hypertext', 'language', 'programming']
 ```
+
+## Related
+
+If you like this package, be sure to check out our [other packages](https://www.npmjs.com/~balboacodes).
