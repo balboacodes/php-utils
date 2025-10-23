@@ -1,11 +1,4 @@
 /**
- * @link https://www.php.net/manual/en/function.abs.php
- */
-export function abs(value: number): number {
-    return value < 0 ? -value : value;
-}
-
-/**
  * @link https://www.php.net/manual/en/function.array-all.php
  */
 export function array_all(
@@ -132,13 +125,6 @@ export function array_find_key(
 }
 
 /**
- * @link https://www.php.net/manual/en/function.array-first.php
- */
-export function array_first(array: any[] | Record<string, any>): any {
-    return Object.values(array)[0] ?? null;
-}
-
-/**
  * @link https://www.php.net/manual/en/function.array-flip.php
  * @throws If parameter contains values other than strings and numbers.
  */
@@ -256,13 +242,6 @@ export function array_keys(
 }
 
 /**
- * @link https://www.php.net/manual/en/function.array-last.php
- */
-export function array_last(array: any[] | Record<string, any>): any {
-    return Object.values(array).pop() ?? null;
-}
-
-/**
  * @link https://php.net/manual/en/function.array-map.php
  */
 export function array_map(
@@ -314,7 +293,7 @@ export function array_merge(...arrays: (any[] | Record<string, any>)[]): any[] |
         }
     }
 
-    return Array.isArray(array_first(arrays)) ? Object.values(result) : result;
+    return Array.isArray(Object.values(arrays)[0]) ? Object.values(result) : result;
 }
 
 /**
@@ -517,13 +496,6 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
 }
 
 /**
- * @link https://www.php.net/manual/en/function.array-values.php
- */
-export function array_values(array: any[] | Record<string, any>): any[] {
-    return Object.values(array);
-}
-
-/**
  * @link https://php.net/manual/en/function.base64-decode.php
  */
 export function base64_decode(string: string, strict: boolean = false): string | false {
@@ -600,13 +572,6 @@ export function basename(path: string, suffix: string = ''): string {
     }
 
     return base;
-}
-
-/**
- * @link https://php.net/manual/en/function.ceil.php
- */
-export function ceil(num: number): number {
-    return Math.ceil(num);
 }
 
 export const COUNT_NORMAL = 0;
@@ -957,15 +922,6 @@ export function http_build_query(
     };
 
     return build(data).join(argSeparator);
-}
-
-/**
- * @link https://php.net/manual/en/function.implode.php
- */
-export function implode(separator: string = '', array: any[] | Record<string, any>): string {
-    return Object.values(array)
-        .map((v) => phpParseString(v))
-        .join(separator);
 }
 
 /**
@@ -1443,23 +1399,6 @@ export function mb_strrpos(haystack: string, needle: string, offset: number = 0)
 
     // Return character index relative to original haystack.
     return Array.from(haystack.substring(0, searchStart)).length + Array.from(searchArea.substring(0, index)).length;
-}
-
-/**
- * @link https://php.net/manual/en/function.mb-strtolower.php
- */
-export function mb_strtolower(string: string): string {
-    // Multibyte-safe lowercase. 'und' = Unicode locale-insensitive lowercase.
-    return string.toLocaleLowerCase('und');
-}
-
-/**
- * @link https://php.net/manual/en/function.mb-strtoupper.php
- */
-export function mb_strtoupper(string: string): string {
-    // Perform Unicode-aware uppercase conversion. JavaScript's .toUpperCase() is Unicode-compliant, matching PHP
-    // mb_strtoupper() for UTF-8. "und" = undefined locale, generic Unicode behavior.
-    return string.toLocaleUpperCase('und');
 }
 
 /**
@@ -2272,20 +2211,6 @@ export function sscanf(string: string, format: string): any[] | null {
 }
 
 /**
- * @link https://www.php.net/manual/en/function.str-contains.php
- */
-export function str_contains(haystack: string, needle: string): boolean {
-    return needle === '' ? true : haystack.includes(needle);
-}
-
-/**
- * @link https://www.php.net/manual/en/function.str-ends-with.php
- */
-export function str_ends_with(haystack: string, needle: string): boolean {
-    return needle === '' ? true : haystack.endsWith(needle);
-}
-
-/**
  * @link https://php.net/manual/en/function.str-ireplace.php
  */
 export function str_ireplace(
@@ -2336,16 +2261,6 @@ export function str_ireplace(
 }
 
 /**
- * @link https://php.net/manual/en/function.str-repeat.php
- */
-export function str_repeat(string: string, times: number): string {
-    // Match PHP's behavior of casting times to integer.
-    times = Math.floor(times);
-
-    return times < 0 ? '' : string.repeat(times);
-}
-
-/**
  * @link https://php.net/manual/en/function.str-replace.php
  */
 export function str_replace(
@@ -2392,13 +2307,6 @@ export function str_replace(
     }
 
     return result;
-}
-
-/**
- * @link https://php.net/manual/en/function.str-starts-with.php
- */
-export function str_starts_with(haystack: string, needle: string): boolean {
-    return needle === '' ? true : haystack.startsWith(needle);
 }
 
 /**
@@ -2808,7 +2716,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
 /**
  * @link https://www.php.net/manual/en/function.unset.php
  *
- * Variables cannot be unset in JS, so we will only accept an array or object and key.
+ * Variables cannot be unset in JS, so we will only accept an array / object and key.
  */
 export function unset(array: any[] | Record<string, any>, key: number | string): void {
     // Remove the key/property if it exists (silent if not)

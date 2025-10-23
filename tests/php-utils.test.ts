@@ -1,12 +1,6 @@
 import * as php from '../src/index';
 import { expect, test } from 'vitest';
 
-test('abs', () => {
-    expect(php.abs(-4.2)).toBe(4.2);
-    expect(php.abs(5)).toBe(5);
-    expect(php.abs(-5)).toBe(5);
-});
-
 test('array_all', () => {
     const array = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
 
@@ -76,21 +70,14 @@ test('array_find_key', () => {
     const arr = ['dog', 'cat', 'cow', 'duck', 'goose', 'elephant'];
 
     expect(Number(php.array_find_key(arr, (value) => php.strlen(value) > 4))).toBe(4);
-    expect(php.array_find_key(arr, (value) => php.str_starts_with(value, 'f'))).toBe(null);
     expect(php.array_find_key(arr, (value, key) => value[0] === key)).toBe(null);
     expect(Number(php.array_find_key(arr, (_, key) => php.preg_match('/^([a-f])$/', String(key))))).toBe(0);
 
     const obj = { a: 'dog', b: 'cat', c: 'cow', d: 'duck', e: 'goose', f: 'elephant' };
 
     expect(php.array_find_key(obj, (value) => php.strlen(value) > 4)).toBe('e');
-    expect(php.array_find_key(obj, (value) => php.str_starts_with(value, 'f'))).toBe(null);
     expect(php.array_find_key(obj, (value, key) => value[0] === key)).toBe('c');
     expect(php.array_find_key(obj, (_, key) => php.preg_match('/^([a-f])$/', String(key)))).toBe('a');
-});
-
-test('array_first', () => {
-    expect(php.array_first(['a', 'b', 'c', 'd'])).toBe('a');
-    expect(php.array_first({ 0: 'a', 1: 'b', 2: 'c', 3: 'd' })).toBe('a');
 });
 
 test('array_flip', () => {
@@ -129,13 +116,6 @@ test('array_keys', () => {
             size: ['small', 'medium', 'large'],
         }),
     ).toEqual(['color', 'size']);
-});
-
-test('array_last', () => {
-    expect(php.array_last(['a', 'b', 'c', 'd'])).toBe('d');
-    expect(php.array_last([])).toBe(null);
-    expect(php.array_last({ 0: 'a', 1: 'b', 2: 'c', 3: 'd' })).toBe('d');
-    expect(php.array_last({})).toBe(null);
 });
 
 test('array_map', () => {
@@ -312,11 +292,6 @@ test('array_unshift', () => {
     expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana', foo: 'bar' });
 });
 
-test('array_values', () => {
-    expect(php.array_values(['XL', 'gold'])).toEqual(['XL', 'gold']);
-    expect(php.array_values({ size: 'XL', color: 'gold' })).toEqual(['XL', 'gold']);
-});
-
 test('base64_decode', () => {
     expect(php.base64_decode('VGhpcyBpcyBhbiBlbmNvZGVkIHN0cmluZw==')).toBe('This is an encoded string');
 });
@@ -332,12 +307,6 @@ test('basename', () => {
     expect(php.basename('/etc/')).toBe('etc');
     expect(php.basename('.')).toBe('.');
     expect(php.basename('/')).toBe('');
-});
-
-test('ceil', () => {
-    expect(php.ceil(4.3)).toBe(5);
-    expect(php.ceil(9.999)).toBe(10);
-    expect(php.ceil(-3.14)).toBe(-3);
 });
 
 test('count', () => {
@@ -462,12 +431,6 @@ test('http_build_query', () => {
     ).toBe('foo=bar&amp;baz=boom&amp;cow=milk&amp;php=hypertext%20processor');
 });
 
-test('implode', () => {
-    expect(php.implode(',', ['lastname', 'email', 'phone'])).toBe('lastname,email,phone');
-    expect(php.implode('hello', [])).toBe('');
-    expect(php.implode(undefined, ['a', 'b', 'c'])).toBe('abc');
-});
-
 test('in_array', () => {
     expect(php.in_array('Irix', ['Mac', 'NT', 'Irix', 'Linux'])).toBe(true);
     expect(php.in_array('mac', ['Mac', 'NT', 'Irix', 'Linux'])).toBe(false);
@@ -590,26 +553,6 @@ test('mb_strrpos', () => {
     expect(php.mb_strrpos('▶▶❤❓❇❤', '❤')).toBe(5);
     expect(php.mb_strrpos('▶❤❓❇❤', '▶', 2)).toBe(false);
     expect(php.mb_strrpos('▶▶❤❇❤', '❓')).toBe(false);
-});
-
-test('mb_strtolower', () => {
-    expect(php.mb_strtolower('Mary Had A Little Lamb and She LOVED It So')).toBe(
-        'mary had a little lamb and she loved it so',
-    );
-
-    expect(php.mb_strtolower('Τάχιστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός')).toBe(
-        'τάχιστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός',
-    );
-});
-
-test('mb_strtoupper', () => {
-    expect(php.mb_strtoupper('Mary Had A Little Lamb and She LOVED It So')).toBe(
-        'MARY HAD A LITTLE LAMB AND SHE LOVED IT SO',
-    );
-
-    expect(php.mb_strtoupper('Τάχιστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός')).toBe(
-        'ΤΆΧΙΣΤΗ ΑΛΏΠΗΞ ΒΑΦΉΣ ΨΗΜΈΝΗ ΓΗ, ΔΡΑΣΚΕΛΊΖΕΙ ΥΠΈΡ ΝΩΘΡΟΎ ΚΥΝΌΣ',
-    );
 });
 
 test('mb_strwidth', () => {
@@ -784,24 +727,8 @@ test('sscanf', () => {
     expect(php.sscanf('January 01 2000', '%s %d %d')).toEqual(['January', 1, 2000]);
 });
 
-test('str_contains', () => {
-    expect(php.str_contains('abc', '')).toEqual(true);
-    expect(php.str_contains('The lazy fox jumped over the fence', 'lazy')).toEqual(true);
-    expect(php.str_contains('The lazy fox jumped over the fence', 'Lazy')).toEqual(false);
-});
-
-test('str_ends_with', () => {
-    expect(php.str_ends_with('abc', '')).toBe(true);
-    expect(php.str_ends_with('The lazy fox jumped over the fence', 'fence')).toBe(true);
-    expect(php.str_ends_with('The lazy fox jumped over the fence', 'Fence')).toBe(false);
-});
-
 test('str_ireplace', () => {
     expect(php.str_ireplace('%body%', 'black', '<body text=%BODY%>')).toBe('<body text=black>');
-});
-
-test('str_repeat', () => {
-    expect(php.str_repeat('-=', 10)).toBe('-=-=-=-=-=-=-=-=-=-=');
 });
 
 test('str_replace', () => {
@@ -817,12 +744,6 @@ test('str_replace', () => {
             'You should eat fruits, vegetables, and fiber every day.',
         ),
     ).toBe('You should eat pizza, beer, and ice cream every day.');
-});
-
-test('str_starts_with', () => {
-    expect(php.str_starts_with('abc', '')).toBe(true);
-    expect(php.str_starts_with('The lazy fox jumped over the fence', 'The')).toBe(true);
-    expect(php.str_starts_with('The lazy fox jumped over the fence', 'the')).toBe(false);
 });
 
 test('str_word_count', () => {
