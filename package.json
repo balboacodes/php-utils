@@ -1,6 +1,6 @@
 {
     "name": "@balboacodes/php-utils",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "A collection of native PHP functions ported to TypeScript",
     "keywords": [
         "php",
@@ -18,12 +18,21 @@
     "author": "Balboa Codes",
     "type": "module",
     "main": "dist/index.js",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
     "files": [
         "dist",
         "LICENSE",
         "README.md"
     ],
     "types": "dist/index.d.ts",
+    "engines": {
+        "node": ">=20"
+    },
     "scripts": {
         "build": "tsc && vite build",
         "format": "prettier --write .",
