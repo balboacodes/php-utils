@@ -164,7 +164,7 @@ export function array_diff_key(
  */
 export function array_diff_uassoc(
     array: any[] | Record<string, any>,
-    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+    ...args: [...(any[] | Record<string, any>)[], (a: number | string, b: number | string) => number]
 ): any[] | Record<string, any> {
     const keyCompare = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
@@ -195,7 +195,7 @@ export function array_diff_uassoc(
  */
 export function array_diff_ukey(
     array: any[] | Record<string, any>,
-    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+    ...args: [...(any[] | Record<string, any>)[], (a: number | string, b: number | string) => number]
 ): any[] | Record<string, any> {
     const compareFn = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
