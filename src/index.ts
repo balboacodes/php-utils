@@ -56,6 +56,171 @@ export function array_combine(
     return result;
 }
 
+/**
+ * @link https://www.php.net/manual/en/function.array-diff.php
+ */
+export function array_diff(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    // Flatten all comparison arrays into one set of values (non-strict).
+    const compareValues: any[] = [];
+
+    for (const arr of arrays) {
+        for (const value of Object.values(arr)) {
+            compareValues.push(value);
+        }
+    }
+
+    for (const [key, value] of Object.entries(array)) {
+        const exists = compareValues.some((v) => v === value);
+
+        if (!exists) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-assoc.php
+ */
+export function array_diff_assoc(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    for (const [key, value] of Object.entries(array)) {
+        let found = false;
+
+        for (const arr of arrays) {
+            // Ensure we’re comparing both key and value.
+            if (Object.hasOwn(arr, key)) {
+                const otherValue = (arr as any)[key];
+
+                if (otherValue === value) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-key.php
+ */
+export function array_diff_key(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    for (const [key, value] of Object.entries(array)) {
+        let found = false;
+
+        for (const arr of arrays) {
+            if (Object.hasOwn(arr, key)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-uassoc.php
+ */
+export function array_diff_uassoc(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const keyCompare = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            for (const [otherKey, otherValue] of Object.entries(other)) {
+                if (keyCompare(String(key), String(otherKey)) === 0 && value === otherValue) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-ukey.php
+ */
+export function array_diff_ukey(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const compareFn = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const arr of arrays) {
+            for (const otherKey of Object.keys(arr)) {
+                if (compareFn(String(key), String(otherKey)) === 0) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
 export const ARRAY_FILTER_USE_KEY = 1;
 export const ARRAY_FILTER_USE_BOTH = 2;
 
@@ -375,6 +540,24 @@ export function array_reduce(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-replace.php
+ */
+export function array_replace(
+    array: any[] | Record<string, any>,
+    ...replacements: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const result: any = Array.isArray(array) ? [...array] : { ...array };
+
+    for (const replacement of replacements) {
+        for (const [key, value] of Object.entries(replacement)) {
+            result[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://php.net/manual/en/function.array-reverse.php
  */
 export function array_reverse(
@@ -465,6 +648,37 @@ export function array_slice(
             result[key] = value;
         } else {
             result[numericIndex++] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-udiff.php
+ */
+export function array_udiff(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
+): any[] | Record<string, any> {
+    const compareFn = args.pop() as (a: any, b: any) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const arr of arrays) {
+            for (const otherValue of Object.values(arr)) {
+                if (compareFn(value, otherValue) === 0) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
         }
     }
 
@@ -1991,6 +2205,69 @@ export function random_int(min: number, max: number): number {
     } while (rand >= limit);
 
     return min + (rand % (range + 1));
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.range.php
+ */
+export function range(start: number | string, end: number | string, step: number = 1): (number | string)[] {
+    if (step === 0) {
+        throw new Error('range(): Step cannot be 0');
+    }
+
+    const result: (number | string)[] = [];
+
+    // Handle numeric range.
+    if (typeof start === 'number' && typeof end === 'number') {
+        if (start < end && step < 0) {
+            throw new Error('range(): Step must be greater than 0 for increasing ranges');
+        }
+
+        if (start <= end) {
+            for (let i = start; i <= end; i += step) {
+                result.push(i);
+            }
+        } else {
+            step = step < 0 ? -step : step;
+
+            for (let i = start; i >= end; i -= step) {
+                result.push(i);
+            }
+        }
+
+        return result;
+    }
+
+    // Handle alphabetic range.
+    if (typeof start === 'string' && typeof end === 'string') {
+        // PHP supports single-character ranges only.
+        if (start.length !== 1 || end.length !== 1) {
+            console.warn('Start and end must be a single byte, subsequent bytes are ignored');
+        }
+
+        const startCode = start.charCodeAt(0);
+        const endCode = end.charCodeAt(0);
+
+        if (startCode < endCode && step < 0) {
+            throw new Error('range(): Step must be greater than 0 for increasing ranges');
+        }
+
+        if (startCode <= endCode) {
+            for (let i = startCode; i <= endCode; i += step) {
+                result.push(String.fromCharCode(i));
+            }
+        } else {
+            step = step < 0 ? -step : step;
+
+            for (let i = startCode; i >= endCode; i -= step) {
+                result.push(String.fromCharCode(i));
+            }
+        }
+
+        return result;
+    }
+
+    throw new TypeError('range(): Both start and end parameters must be of the same type');
 }
 
 /**

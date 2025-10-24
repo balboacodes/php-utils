@@ -51,6 +51,69 @@ test('array_combine', () => {
     });
 });
 
+test('array_diff', () => {
+    const array1 = { a: 'green', 0: 'red', 1: 'blue', 2: 'red' };
+    const array2 = { b: 'green', 1: 'yellow', 2: 'red' };
+    expect(php.array_diff(array1, array2)).toEqual({ 1: 'blue' });
+
+    const source = [1, 2, 3, 4];
+    const filter = [3, 4, [5], 6];
+    expect(php.array_diff(source, filter)).toEqual([1, 2]);
+});
+
+test('array_diff_assoc', () => {
+    let array1: any = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    let array2: any = { a: 'green', 0: 'yellow', 1: 'red' };
+    expect(php.array_diff_assoc(array1, array2)).toEqual({ b: 'brown', c: 'blue', 0: 'red' });
+
+    array1 = [0, 1, 2];
+    array2 = ['00', '01', '2'];
+    expect(php.array_diff_assoc(array1, array2)).toEqual([0, 1, 2]);
+});
+
+test('array_diff_key', () => {
+    let array1 = { blue: 1, red: 2, green: 3, purple: 4 };
+    let array2 = { green: 5, yellow: 7, cyan: 8 };
+    expect(php.array_diff_key(array1, array2)).toEqual({ blue: 1, red: 2, purple: 4 });
+
+    array1 = { blue: 1, red: 2, green: 3, purple: 4 };
+    array2 = { green: 5, yellow: 7, cyan: 8 };
+    const array3 = { blue: 6, yellow: 7, mauve: 8 };
+    expect(php.array_diff_key(array1, array2, array3)).toEqual({ red: 2, purple: 4 });
+});
+
+test('array_diff_uassoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'green', 0: 'yellow', 1: 'red' };
+    const key_compare_func = (a: string, b: string) => {
+        if (a === b) {
+            return 0;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
+
+    expect(php.array_diff_uassoc(array1, array2, key_compare_func)).toEqual({ b: 'brown', c: 'blue', 0: 'red' });
+});
+
+test('array_diff_ukey', () => {
+    const array1: any = { blue: 1, red: 2, green: 3, purple: 4 };
+    const array2: any = { green: 5, blue: 6, yellow: 7, cyan: 8 };
+    const key_compare_func = (key1: string, key2: string) => {
+        if (key1 === key2) {
+            return 0;
+        } else if (key1 > key2) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
+
+    expect(php.array_diff_ukey(array1, array2, key_compare_func)).toEqual({ red: 2, purple: 4 });
+});
+
 test('array_filter', () => {
     expect(php.array_filter([1, 2, 3, 4, 5], (v) => v % 2 !== 0)).toEqual([1, 3, 5]);
     expect(php.array_filter(['foo', false, -1, null, '', '0', 0], undefined)).toEqual(['foo', -1, '0']);
@@ -223,6 +286,29 @@ test('array_reduce', () => {
     expect(php.array_reduce({}, (carry, item) => (carry += item), 'No data to reduce')).toBe('No data to reduce');
 });
 
+test('array_replace', () => {
+    let base: any = ['orange', 'banana', 'apple', 'raspberry'];
+    let replacements: any = { 0: 'pineapple', 4: 'cherry' };
+    let replacements2: any = ['grape'];
+
+    expect(php.array_replace(base, replacements, replacements2)).toEqual([
+        'grape',
+        'banana',
+        'apple',
+        'raspberry',
+        'cherry',
+    ]);
+
+    base = { citrus: ['orange', 'lemon'], pome: ['apple'] };
+    replacements = { citrus: ['grapefruit'] };
+    replacements2 = { citrus: ['kumquat', 'citron'], pome: ['loquat'] };
+
+    expect(php.array_replace(base, replacements, replacements2)).toEqual({
+        citrus: ['kumquat', 'citron'],
+        pome: ['loquat'],
+    });
+});
+
 test('array_reverse', () => {
     expect(php.array_reverse(['php', 4, ['green', 'red']])).toEqual([['green', 'red'], 4, 'php']);
     expect(php.array_reverse({ 0: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } })).toEqual({
@@ -276,6 +362,38 @@ test('array_slice', () => {
     expect(php.array_slice(obj, 0, 3)).toEqual({ 0: 'a', 1: 'b', 2: 'c' });
     expect(php.array_slice(obj, 2, -1)).toEqual({ 0: 'c', 1: 'd' });
     expect(php.array_slice(obj, 2, -1, true)).toEqual({ 2: 'c', 3: 'd' });
+});
+
+test('array_udiff', () => {
+    let array1: any = [
+        { width: 11, height: 3 },
+        { width: 7, height: 1 },
+        { width: 2, height: 9 },
+        { width: 5, height: 7 },
+    ];
+
+    let array2: any = [
+        { width: 7, height: 5 },
+        { width: 9, height: 2 },
+    ];
+
+    const compare_by_area = (a: Record<string, number>, b: Record<string, number>): 1 | 0 | -1 => {
+        const areaA = a.width * a.height;
+        const areaB = b.width * b.height;
+
+        if (areaA < areaB) {
+            return -1;
+        } else if (areaA > areaB) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
+    expect(php.array_udiff(array1, array2, compare_by_area)).toEqual([
+        { width: 11, height: 3 },
+        { width: 7, height: 1 },
+    ]);
 });
 
 test('array_unshift', () => {
@@ -661,6 +779,21 @@ test('random_bytes', () => {
 
 test('random_int', () => {
     expect(php.random_int(100, 999)).toBeTypeOf('number');
+});
+
+test('range', () => {
+    expect(php.range(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(php.range(5, 1)).toEqual([5, 4, 3, 2, 1]);
+    expect(php.range(5, 1, -1)).toEqual([5, 4, 3, 2, 1]);
+    expect(php.range(0, 10, 2)).toEqual([0, 2, 4, 6, 8, 10]);
+    expect(php.range(10, 0, 2)).toEqual([10, 8, 6, 4, 2, 0]);
+
+    expect(php.range('a', 'i')).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
+    expect(php.range('c', 'a')).toEqual(['c', 'b', 'a']);
+
+    expect(() => php.range(1, 5, 0)).toThrow('range(): Step cannot be 0');
+    expect(() => php.range(1, 5, -1)).toThrow('range(): Step must be greater than 0 for increasing ranges');
+    expect(() => php.range(1, 'a')).toThrow('range(): Both start and end parameters must be of the same type');
 });
 
 test('rsort', () => {
