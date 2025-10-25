@@ -274,6 +274,21 @@ test('array_merge', () => {
     ).toEqual({ color: 'green', 0: 2, 1: 4, 2: 'a', 3: 'b', shape: 'trapezoid', 4: 4 });
 });
 
+test('array_merge_recursive', () => {
+    const ar1 = { color: { favorite: 'red' }, 0: 5 };
+    const ar2 = { 0: 10, color: { favorite: 'green', 0: 'blue' } };
+    expect(php.array_merge_recursive(ar1, ar2)).toEqual({
+        color: { favorite: ['red', 'green'], 0: 'blue' },
+        0: [5, 10],
+    });
+
+    const ar3 = { color: { favorite: 'red' } };
+    const ar4 = { color: 'green' };
+    expect(php.array_merge_recursive(ar3, ar4)).toEqual({
+        color: { favorite: 'red', 0: 'green' },
+    });
+});
+
 test('array_pop', () => {
     const array = ['orange', 'banana', 'apple', 'raspberry'];
 

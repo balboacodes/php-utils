@@ -575,7 +575,7 @@ export function array_merge(...arrays: (any[] | Record<string, any>)[]): any[] |
 
     for (const arr of arrays) {
         for (const [key, value] of Object.entries(arr)) {
-            // String keys always preserved; numeric keys reindexed
+            // String keys always preserved; numeric keys reindexed.
             if (isNaN(Number(key))) {
                 result[key] = value;
             } else {
@@ -584,7 +584,66 @@ export function array_merge(...arrays: (any[] | Record<string, any>)[]): any[] |
         }
     }
 
-    return Array.isArray(Object.values(arrays)[0]) ? Object.values(result) : result;
+    return Array.isArray(arrays[0]) ? Object.values(result) : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-merge-recursive.php
+ */
+export function array_merge_recursive(...arrays: (any[] | Record<string, any>)[]): any[] | Record<string, any> {
+    if (arrays.length === 0) {
+        return [];
+    }
+
+    const result: Record<string, any> = {};
+    let numericIndex = 0;
+
+    for (const array of arrays) {
+        if (Array.isArray(array)) {
+            // Append values for numeric keys.
+            for (const value of array) {
+                result[numericIndex] = value;
+                numericIndex++;
+            }
+        } else {
+            // Merge associative (object) keys.
+            for (const [key, value] of Object.entries(array)) {
+                if (key in result) {
+                    const existing = (result as Record<string, any>)[key];
+
+                    if (isPlainObject(existing) && isPlainObject(value)) {
+                        // Recursively merge objects.
+                        (result as Record<string, any>)[key] = array_merge_recursive(existing, value);
+                    } else if (Array.isArray(existing) && Array.isArray(value)) {
+                        // Merge arrays.
+                        (result as Record<string, any>)[key] = [...existing, ...value];
+                    } else if (isPlainObject(existing) || isPlainObject(value)) {
+                        // Create new object and merge.
+                        if (isPlainObject(existing)) {
+                            const wrapped: any[] = Array.isArray(value) ? value : [value];
+                            (result as Record<string, any>)[key] = { ...existing, ...wrapped };
+                        } else {
+                            const wrapped: any[] = Array.isArray(existing) ? existing : [existing];
+                            (result as Record<string, any>)[key] = { ...[existing], ...wrapped };
+                        }
+                    } else {
+                        // Convert both to arrays and merge.
+                        (result as Record<string, any>)[key] = [].concat(existing, value);
+                    }
+                } else {
+                    // New key.
+                    (result as Record<string, any>)[key] = value;
+                }
+            }
+        }
+    }
+
+    return Array.isArray(arrays[0]) ? Object.values(result) : result;
+}
+
+// Helper to detect plain objects
+function isPlainObject(value: any): boolean {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
