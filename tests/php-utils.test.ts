@@ -148,6 +148,20 @@ test('array_flip', () => {
     expect(php.array_flip({ a: 0, b: 1, c: 2 })).toEqual({ 0: 'a', 1: 'b', 2: 'c' });
 });
 
+test('array_intersect', () => {
+    const array1 = { a: 'green', 0: 'red', 1: 'blue' };
+    const array2 = { b: 'green', 0: 'yellow', 1: 'red' };
+
+    expect(php.array_intersect(array1, array2)).toEqual({ a: 'green', 0: 'red' });
+});
+
+test('array_intersect_assoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'green', b: 'yellow', 0: 'blue', 1: 'red' };
+
+    expect(php.array_intersect_assoc(array1, array2)).toEqual({ a: 'green' });
+});
+
 test('array_intersect_key', () => {
     expect(php.array_intersect_key(['blue', 'red', 'green', 'purple'], ['green', 'blue', 'yellow', 'cyan'])).toEqual([
         'blue',
@@ -158,6 +172,15 @@ test('array_intersect_key', () => {
     expect(
         php.array_intersect_key({ blue: 1, red: 2, green: 3, purple: 4 }, { green: 5, blue: 6, yellow: 7, cyan: 8 }),
     ).toEqual({ blue: 1, green: 3 });
+});
+
+test('array_intersect_uassoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'GREEN', B: 'brown', 0: 'yellow', 1: 'red' };
+
+    expect(
+        php.array_intersect_uassoc(array1, array2, (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
+    ).toEqual({ b: 'brown' });
 });
 
 test('array_key_first', () => {
@@ -394,6 +417,17 @@ test('array_udiff', () => {
         { width: 11, height: 3 },
         { width: 7, height: 1 },
     ]);
+});
+
+test('array_uintersect', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'GREEN', B: 'brown', 0: 'yellow', 1: 'red' };
+
+    expect(php.array_uintersect(array1, array2, (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))).toEqual({
+        a: 'green',
+        b: 'brown',
+        0: 'red',
+    });
 });
 
 test('array_unshift', () => {

@@ -164,7 +164,7 @@ export function array_diff_key(
  */
 export function array_diff_uassoc(
     array: any[] | Record<string, any>,
-    ...args: [...(any[] | Record<string, any>)[], (a: number | string, b: number | string) => number]
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
 ): any[] | Record<string, any> {
     const keyCompare = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
@@ -174,7 +174,7 @@ export function array_diff_uassoc(
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
             for (const [otherKey, otherValue] of Object.entries(other)) {
-                if (keyCompare(String(key), String(otherKey)) === 0 && value === otherValue) {
+                if (keyCompare(key, otherKey) === 0 && value === otherValue) {
                     continue outer;
                 }
             }
@@ -195,7 +195,7 @@ export function array_diff_uassoc(
  */
 export function array_diff_ukey(
     array: any[] | Record<string, any>,
-    ...args: [...(any[] | Record<string, any>)[], (a: number | string, b: number | string) => number]
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
 ): any[] | Record<string, any> {
     const compareFn = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
@@ -205,7 +205,7 @@ export function array_diff_ukey(
     outer: for (const [key, value] of Object.entries(array)) {
         for (const arr of arrays) {
             for (const otherKey of Object.keys(arr)) {
-                if (compareFn(String(key), String(otherKey)) === 0) {
+                if (compareFn(key, otherKey) === 0) {
                     continue outer;
                 }
             }
@@ -308,6 +308,64 @@ export function array_flip(array: any[] | Record<string, any>): Record<string, s
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-intersect.php
+ */
+export function array_intersect(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            // Convert both objects and arrays to plain value arrays for comparison.
+            const otherValues = Object.values(other);
+
+            if (!otherValues.some((v) => v === value)) {
+                // Value not found in one of the arrays.
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-intersect-assoc.php
+ */
+export function array_intersect_assoc(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            if ((other as any)[key] !== value) {
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
  * @throws If less than two parameters are given.
  */
@@ -332,6 +390,44 @@ export function array_intersect_key(
     }
 
     return Array.isArray(array) ? Object.values(result) : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-intersect-uassoc.php
+ */
+export function array_intersect_uassoc(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const keyCompareFunc = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            let matched = false;
+
+            for (const [otherKey, otherValue] of Object.entries(other)) {
+                if (value === otherValue && keyCompareFunc(key, otherKey) === 0) {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -672,6 +768,44 @@ export function array_udiff(
                 if (compareFn(value, otherValue) === 0) {
                     continue outer;
                 }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-uintersect.php
+ */
+export function array_uintersect(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
+): any[] | Record<string, any> {
+    const valueCompareFunc = args.pop() as (a: any, b: any) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            let matched = false;
+
+            for (const otherValue of Object.values(other)) {
+                if (valueCompareFunc(value, otherValue) === 0) {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                continue outer;
             }
         }
 
