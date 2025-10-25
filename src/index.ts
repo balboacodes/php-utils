@@ -1,3 +1,36 @@
+export const ARRAY_FILTER_USE_KEY = 1;
+export const ARRAY_FILTER_USE_BOTH = 2;
+export const COUNT_NORMAL = 0;
+export const COUNT_RECURSIVE = 1;
+export const FILTER_VALIDATE_INT = 257;
+export const FILTER_VALIDATE_BOOLEAN = 258;
+export const FILTER_VALIDATE_FLOAT = 259;
+export const FILTER_VALIDATE_URL = 273;
+export const FILTER_VALIDATE_EMAIL = 274;
+export const FILTER_SANITIZE_STRING = 513;
+export const FILTER_DEFAULT = 516;
+export const FILTER_UNSAFE_RAW = 516;
+export const FILTER_SANITIZE_EMAIL = 517;
+export const FILTER_SANITIZE_URL = 518;
+export const MB_CASE_UPPER = 0;
+export const MB_CASE_LOWER = 1;
+export const MB_CASE_TITLE = 2;
+export const PHP_QUERY_RFC1738 = 1;
+export const PHP_QUERY_RFC3986 = 2;
+export const PREG_SET_ORDER = 2;
+export const PREG_OFFSET_CAPTURE = 4;
+export const PREG_SPLIT_NO_EMPTY = 1;
+export const PREG_SPLIT_DELIM_CAPTURE = 2;
+export const PREG_SPLIT_OFFSET_CAPTURE = 4;
+export const SORT_REGULAR = 0;
+export const SORT_NUMERIC = 1;
+export const SORT_STRING = 2;
+export const SORT_NATURAL = 6;
+export const SORT_FLAG_CASE = 8;
+export const STR_PAD_LEFT = 0;
+export const STR_PAD_RIGHT = 1;
+export const STR_PAD_BOTH = 2;
+
 /**
  * @link https://www.php.net/manual/en/function.array-all.php
  */
@@ -220,9 +253,6 @@ export function array_diff_ukey(
 
     return result;
 }
-
-export const ARRAY_FILTER_USE_KEY = 1;
-export const ARRAY_FILTER_USE_BOTH = 2;
 
 /**
  * @link https://php.net/manual/en/function.array-filter.php
@@ -922,9 +952,6 @@ export function basename(path: string, suffix: string = ''): string {
     return base;
 }
 
-export const COUNT_NORMAL = 0;
-export const COUNT_RECURSIVE = 1;
-
 /**
  * @link https://php.net/manual/en/function.count.php
  */
@@ -1067,17 +1094,6 @@ export function explode(separator: string, string: string, limit: number = Numbe
     return parts.slice(0, limit);
 }
 
-export const FILTER_VALIDATE_INT = 257;
-export const FILTER_VALIDATE_BOOLEAN = 258;
-export const FILTER_VALIDATE_FLOAT = 259;
-export const FILTER_VALIDATE_URL = 273;
-export const FILTER_VALIDATE_EMAIL = 274;
-export const FILTER_SANITIZE_STRING = 513;
-export const FILTER_DEFAULT = 516;
-export const FILTER_UNSAFE_RAW = 516;
-export const FILTER_SANITIZE_EMAIL = 517;
-export const FILTER_SANITIZE_URL = 518;
-
 /**
  * @link https://php.net/manual/en/function.filter-var.php
  */
@@ -1211,9 +1227,6 @@ export async function hash(
     return digest.toString('hex');
 }
 
-export const PHP_QUERY_RFC1738 = 1;
-export const PHP_QUERY_RFC3986 = 2;
-
 /**
  * @link https://www.php.net/manual/en/function.http-build-query.php
  */
@@ -1304,12 +1317,6 @@ export function isset(...vars: any[]): boolean {
     return true;
 }
 
-export const SORT_REGULAR = 0;
-export const SORT_NUMERIC = 1;
-export const SORT_STRING = 2;
-export const SORT_NATURAL = 6;
-export const SORT_FLAG_CASE = 8;
-
 /**
  * @link https://www.php.net/manual/en/function.krsort.php
  */
@@ -1375,29 +1382,6 @@ export function ksort(
 }
 
 /**
- * Compare two keys according to PHP's sort flag logic.
- */
-function compareKeys(
-    a: string,
-    b: string,
-    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING,
-): number {
-    switch (flags) {
-        case SORT_NUMERIC:
-            return Number(a) - Number(b);
-        case SORT_STRING:
-            return a.localeCompare(b);
-        default:
-            // PHP's default comparison: numeric if both numeric strings, else string
-            const aNum = parseFloat(a);
-            const bNum = parseFloat(b);
-            const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
-
-            return bothNumeric ? aNum - bNum : a.localeCompare(b);
-    }
-}
-
-/**
  * @link https://php.net/manual/en/function.lcfirst.php
  */
 export function lcfirst(string: string): string {
@@ -1440,10 +1424,6 @@ export function max(...values: any[]): any {
     // Use PHP-style loose comparison rules.
     return values.reduce((maxValue, current) => (current > maxValue ? current : maxValue));
 }
-
-export const MB_CASE_UPPER = 0;
-export const MB_CASE_LOWER = 1;
-export const MB_CASE_TITLE = 2;
 
 /**
  * @link https://php.net/manual/en/function.mb-convert-case.php
@@ -1661,10 +1641,6 @@ export function mb_strlen(string: string): number {
     return count;
 }
 
-export const STR_PAD_LEFT = 0;
-export const STR_PAD_RIGHT = 1;
-export const STR_PAD_BOTH = 2;
-
 /**
  * @link https://php.net/manual/en/function.mb-strpos.php
  */
@@ -1860,9 +1836,6 @@ export function preg_match(pattern: string, subject: string, matches?: string[])
         return false;
     }
 }
-
-export const PREG_SET_ORDER = 2;
-export const PREG_OFFSET_CAPTURE = 4;
 
 /**
  * @link https://php.net/manual/en/function.preg-match-all.php
@@ -2153,10 +2126,6 @@ export function preg_replace_callback(
 
     return result;
 }
-
-export const PREG_SPLIT_NO_EMPTY = 1;
-export const PREG_SPLIT_DELIM_CAPTURE = 2;
-export const PREG_SPLIT_OFFSET_CAPTURE = 4;
 
 /**
  * @link https://php.net/manual/en/function.preg-split.php
@@ -3203,6 +3172,29 @@ export function wordwrap(
     }
 
     return lines.join(breakStr);
+}
+
+/**
+ * Compare two keys according to PHP's sort flag logic.
+ */
+function compareKeys(
+    a: string,
+    b: string,
+    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING,
+): number {
+    switch (flags) {
+        case SORT_NUMERIC:
+            return Number(a) - Number(b);
+        case SORT_STRING:
+            return a.localeCompare(b);
+        default:
+            // PHP's default comparison: numeric if both numeric strings, else string
+            const aNum = parseFloat(a);
+            const bNum = parseFloat(b);
+            const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+            return bothNumeric ? aNum - bNum : a.localeCompare(b);
+    }
 }
 
 /**
