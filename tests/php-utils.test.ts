@@ -347,6 +347,58 @@ test('array_replace', () => {
     });
 });
 
+test('array_replace_recursive', () => {
+    let base: any = { citrus: ['orange'], berries: ['blackberry', 'raspberry'] };
+    let replacements: any = { citrus: ['pineapple'], berries: ['blueberry'] };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'], others: 'banana' };
+    replacements = { citrus: 'pineapple', berries: ['blueberry'], others: ['litchis'] };
+    let replacements2 = { citrus: ['pineapple'], berries: ['blueberry'], others: 'litchis' };
+    expect(php.array_replace_recursive(base, replacements, replacements2)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+        others: 'litchis',
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'] };
+    replacements = [['pineapple'], ['blueberry']];
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        citrus: ['orange'],
+        berries: ['blackberry', 'raspberry'],
+        0: ['pineapple'],
+        1: ['blueberry'],
+    });
+
+    base = [['orange'], ['blackberry', 'raspberry']];
+    replacements = { citrus: ['pineapple'], berries: ['blueberry'] };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        0: ['orange'],
+        1: ['blackberry', 'raspberry'],
+        citrus: ['pineapple'],
+        berries: ['blueberry'],
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'], others: 'banana' };
+    replacements = ['pineapple', ['blueberry'], ['litchis']];
+    replacements2 = { citrus: ['pineapple'], berries: ['blueberry'], others: 'litchis' };
+    expect(php.array_replace_recursive(base, replacements, replacements2)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+        others: 'litchis',
+        0: 'pineapple',
+        1: ['blueberry'],
+        2: ['litchis'],
+    });
+
+    base = ['a', 'b', ['c', 'd']];
+    replacements = { 0: 'z', 2: { 1: 'e' } };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({ 0: 'z', 1: 'b', 2: { 0: 'c', 1: 'e' } });
+});
+
 test('array_reverse', () => {
     expect(php.array_reverse(['php', 4, ['green', 'red']])).toEqual([['green', 'red'], 4, 'php']);
     expect(php.array_reverse({ 0: 'php', 1: 4, 2: { 0: 'green', 1: 'red' } })).toEqual({
@@ -369,6 +421,16 @@ test('array_reverse', () => {
         2: { 0: 'green', 1: 'red' },
         foo: 'php',
     });
+});
+
+test('array_search', () => {
+    const array = ['blue', 'red', 'green', 'red'];
+    expect(php.array_search('green', array)).toEqual(2);
+    expect(php.array_search('pink', array)).toEqual(false);
+
+    const obj = { foo: 'bar', bar: 'baz' };
+    expect(php.array_search('bar', obj)).toEqual('foo');
+    expect(php.array_search('buzz', obj)).toEqual(false);
 });
 
 test('array_shift', () => {

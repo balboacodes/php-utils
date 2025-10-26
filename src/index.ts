@@ -641,11 +641,6 @@ export function array_merge_recursive(...arrays: (any[] | Record<string, any>)[]
     return Array.isArray(arrays[0]) ? Object.values(result) : result;
 }
 
-// Helper to detect plain objects
-function isPlainObject(value: any): boolean {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 /**
  * @link https://www.php.net/manual/en/function.array-pop.php
  */
@@ -743,6 +738,49 @@ export function array_replace(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-replace-recursive.php
+ */
+export function array_replace_recursive(...arrays: (any[] | Record<string, any>)[]): any[] | Record<string, any> {
+    if (arrays.length === 0) {
+        return [];
+    }
+
+    let result: any[] | Record<string, any> = Array.isArray(arrays[0]) ? [...arrays[0]] : { ...arrays[0] };
+
+    for (let i = 1; i < arrays.length; i++) {
+        const current = arrays[i];
+
+        if (!isPlainObject(current) && !Array.isArray(current)) {
+            // Replace scalar values entirely.
+            result = current;
+            continue;
+        }
+
+        if (isPlainObject(current) && !isPlainObject(result)) {
+            // Convert arrays or scalar into objects before merge.
+            result = Array.isArray(result) ? Object.assign({}, result) : { 0: result };
+        } else if (Array.isArray(current) && !Array.isArray(result)) {
+            // Convert object or scalar into object before merge
+            result = isPlainObject(result) ? { ...result } : { 0: result };
+        }
+
+        for (const [key, value] of Object.entries(current)) {
+            if (
+                key in result &&
+                (Array.isArray((result as any)[key]) || isPlainObject((result as any)[key])) &&
+                (Array.isArray(value) || isPlainObject(value))
+            ) {
+                (result as any)[key] = array_replace_recursive((result as any)[key], value);
+            } else {
+                (result as any)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://php.net/manual/en/function.array-reverse.php
  */
 export function array_reverse(
@@ -767,6 +805,31 @@ export function array_reverse(
         });
 
     return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-search.php
+ */
+export function array_search(
+    needle: any,
+    haystack: any[] | Record<string, any>,
+    strict: boolean = false,
+): number | string | false {
+    if (Array.isArray(haystack)) {
+        for (let i = 0; i < haystack.length; i++) {
+            if (strict ? haystack[i] === needle : haystack[i] == needle) {
+                return i;
+            }
+        }
+    } else if (typeof haystack === 'object' && haystack !== null) {
+        for (const [key, value] of Object.entries(haystack)) {
+            if (strict ? value === needle : value == needle) {
+                return key;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -3274,6 +3337,13 @@ function fromBinaryString(binary: string): string {
     }
 
     return result;
+}
+
+/**
+ * Helper to detect plain objects
+ */
+function isPlainObject(value: any): boolean {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
