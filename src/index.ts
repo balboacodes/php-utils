@@ -3221,12 +3221,7 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
  * Variables cannot be unset in JS, so we will only accept an array / object and key.
  */
 export function unset(array: any[] | Record<string, any>, key: number | string): void {
-    // Remove the key/property if it exists (silent if not)
-    if (Array.isArray(array)) {
-        array.splice(Number(key), 1);
-    } else {
-        delete array[key];
-    }
+    delete (array as any)[key];
 }
 
 /**

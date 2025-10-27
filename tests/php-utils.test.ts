@@ -1100,7 +1100,7 @@ test('unset', () => {
 
     php.unset(arr, 1);
 
-    expect(arr).toEqual(['foo', 'baz']);
+    expect(arr).toEqual(['foo', undefined, 'baz']);
 
     const obj = { foo: 1, bar: 2, baz: 3 };
 
