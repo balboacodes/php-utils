@@ -1036,6 +1036,63 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
 }
 
 /**
+ * @link https://php.net/manual/en/function.asort.php
+ */
+export function asort(
+    array: any[] | Record<string, any>,
+    sortFlags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING | typeof SORT_FLAG_CASE = SORT_REGULAR,
+): true {
+    const sortedEntries = Object.entries(array).sort((a: [string, any], b: [string, any]): number => {
+        let [_, valA] = a;
+        let [__, valB] = b;
+
+        switch (sortFlags) {
+            case SORT_NUMERIC:
+                valA = Number(valA);
+                valB = Number(valB);
+                break;
+            case SORT_STRING:
+                valA = String(valA);
+                valB = String(valB);
+                break;
+            case SORT_FLAG_CASE:
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
+                break;
+            case SORT_REGULAR:
+            default:
+                break;
+        }
+
+        if (valA < valB) {
+            return -1;
+        }
+
+        if (valA > valB) {
+            return 1;
+        }
+
+        return 0;
+    });
+
+    const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+
+    for (const [key, value] of sortedEntries) {
+        if (Array.isArray(result)) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    // Mutate the original array (PHP-style).
+    Object.keys(array).forEach((k) => delete (array as any)[k]);
+    Object.assign(array, result);
+
+    return true;
+}
+
+/**
  * @link https://php.net/manual/en/function.base64-decode.php
  */
 export function base64_decode(string: string, strict: boolean = false): string | false {
@@ -3238,6 +3295,28 @@ export function trim(string: string, characters: string = ' \n\r\t\v\0'): string
     const pattern = new RegExp(`^[${escaped}]+|[${escaped}]+$`, 'gu');
 
     return string.replace(pattern, '');
+}
+
+/**
+ * @link https://php.net/manual/en/function.uasort.php
+ */
+export function uasort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
+    const sortedEntries = Object.entries(array).sort(([_aKey, aVal], [_bKey, bVal]) => callback(aVal, bVal));
+    const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+
+    for (const [key, value] of sortedEntries) {
+        if (Array.isArray(result)) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    // Mutate the original array (PHP-style).
+    Object.keys(array).forEach((k) => delete (array as any)[k]);
+    Object.assign(array, result);
+
+    return true;
 }
 
 /**

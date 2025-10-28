@@ -542,6 +542,16 @@ test('array_unshift', () => {
     expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana', foo: 'bar' });
 });
 
+test('asort', () => {
+    let fruits: any = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.asort(fruits);
+    expect(fruits).toEqual({ c: 'apple', b: 'banana', d: 'lemon', a: 'orange' });
+
+    fruits = ['lemon', 'orange', 'banana', 'apple'];
+    php.asort(fruits);
+    expect(fruits).toEqual(['apple', 'banana', 'lemon', 'orange']);
+});
+
 test('base64_decode', () => {
     expect(php.base64_decode('VGhpcyBpcyBhbiBlbmNvZGVkIHN0cmluZw==')).toBe('This is an encoded string');
 });
@@ -1109,6 +1119,24 @@ test('trim', () => {
     expect(php.trim('\t\tThese are a few words :) ...  ', ' \t.')).toBe('These are a few words :)');
     expect(php.trim('Hello World', 'Hdle')).toBe('o Wor');
     expect(php.trim('\x09Example string\x0A', '\x09\x0A')).toBe('Example string');
+});
+
+test('uasort', () => {
+    function cmp(a: any, b: any) {
+        if (a == b) {
+            return 0;
+        }
+
+        return a < b ? -1 : 1;
+    }
+
+    let array: any = { a: 4, b: 8, c: -1, d: -9, e: 2, f: 5, g: 3, h: -4 };
+    php.uasort(array, cmp);
+    expect(array).toEqual({ d: -9, h: -4, c: -1, e: 2, g: 3, a: 4, f: 5, b: 8 });
+
+    array = [4, 8, -1, -9, 2, 5, 3, -4];
+    php.uasort(array, cmp);
+    expect(array).toEqual([-9, -4, -1, 2, 3, 4, 5, 8]);
 });
 
 test('ucwords', () => {
