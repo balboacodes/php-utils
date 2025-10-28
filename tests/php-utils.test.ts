@@ -507,6 +507,27 @@ test('array_uintersect', () => {
     });
 });
 
+test('array_unique', () => {
+    let input: any = { a: 'green', 0: 'red', b: 'green', 1: 'blue', 2: 'red' };
+    expect(php.array_unique(input)).toEqual({ a: 'green', 0: 'red', 1: 'blue' });
+
+    input = [4, '4', '3', 4, 3, '3'];
+    expect(php.array_unique(input)).toEqual([4, '3']);
+
+    input = [
+        [1, 2],
+        [1, 2],
+        [2, 3],
+        [3, 4],
+        [2, 3],
+    ];
+    expect(php.array_unique(input)).toEqual([
+        [1, 2],
+        [2, 3],
+        [3, 4],
+    ]);
+});
+
 test('array_unshift', () => {
     const array = ['orange', 'banana'];
     expect(php.array_unshift(array, 'apple', 'raspberry')).toBe(4);

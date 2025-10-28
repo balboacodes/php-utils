@@ -972,6 +972,46 @@ export function array_uintersect(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-unique.php
+ */
+export function array_unique(
+    array: any[] | Record<string, any>,
+    sortFlags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_STRING,
+): any[] | Record<string, any> {
+    const seen = new Set<string>();
+    const result: any = Array.isArray(array) ? [] : {};
+
+    const normalize = (value: any): any => {
+        switch (sortFlags) {
+            case SORT_NUMERIC:
+                return String(Number(value));
+            case SORT_STRING:
+                return String(value);
+            case SORT_REGULAR:
+            default:
+                // JSON.stringify provides stable comparison for arrays/objects.
+                return typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value);
+        }
+    };
+
+    for (const [key, value] of Object.entries(array)) {
+        const normalized = normalize(value);
+
+        if (!seen.has(normalized)) {
+            seen.add(normalized);
+
+            if (Array.isArray(array)) {
+                result.push(value);
+            } else {
+                result[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-unshift.php
  */
 export function array_unshift(array: any[] | Record<string, any>, ...values: any[]): number {
