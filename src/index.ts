@@ -1451,12 +1451,16 @@ export function http_build_query(
  * @link https://php.net/manual/en/function.in-array.php
  */
 export function in_array(needle: any, haystack: any[] | Record<string, any>, strict: boolean = false): boolean {
-    for (const value of Object.values(haystack)) {
+    for (let value of Object.values(haystack)) {
         if (strict) {
             if (needle === value) {
                 return true;
             }
         } else {
+            // Convert arrays and objects to strings in order to compare structure since JS compares objects based on reference.
+            needle = typeof needle === 'object' && needle !== null ? JSON.stringify(needle) : needle;
+            value = typeof value === 'object' && value !== null ? JSON.stringify(value) : value;
+
             if (needle == value) {
                 return true;
             }
