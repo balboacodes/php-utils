@@ -43,6 +43,16 @@ test('array_any', () => {
     expect(php.array_any(object, (_, key) => typeof key !== 'string')).toBe(false);
 });
 
+test('array_chunk', () => {
+    let input_array: any = ['a', 'b', 'c', 'd', 'e'];
+    expect(php.array_chunk(input_array, 2)).toEqual([['a', 'b'], ['c', 'd'], ['e']]);
+    expect(php.array_chunk(input_array, 2, true)).toEqual([{ 0: 'a', 1: 'b' }, { 2: 'c', 3: 'd' }, { 4: 'e' }]);
+
+    input_array = { a: 1, b: 2, c: 3, d: 4, e: 5 };
+    expect(php.array_chunk(input_array, 2)).toEqual([[1, 2], [3, 4], [5]]);
+    expect(php.array_chunk(input_array, 2, true)).toEqual([{ a: 1, b: 2 }, { c: 3, d: 4 }, { e: 5 }]);
+});
+
 test('array_combine', () => {
     expect(php.array_combine(['green', 'red', 'yellow'], ['avocado', 'apple', 'banana'])).toEqual({
         green: 'avocado',

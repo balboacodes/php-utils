@@ -64,6 +64,45 @@ export function array_any(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-chunk.php
+ */
+export function array_chunk(
+    array: any[] | Record<string, any>,
+    length: number,
+    preserveKeys = false,
+): (any[] | Record<string, any>)[] {
+    if (length < 1) {
+        throw new RangeError('array_chunk(): Length parameter must be greater than 0');
+    }
+
+    const chunks: (any[] | Record<string, any>)[] = [];
+    let currentChunk: any = preserveKeys ? {} : [];
+    let count = 0;
+
+    for (const [key, value] of Object.entries(array)) {
+        if (preserveKeys) {
+            (currentChunk as Record<string, any>)[key] = value;
+        } else {
+            (currentChunk as any[]).push(value);
+        }
+
+        count++;
+
+        if (count % length === 0) {
+            chunks.push(currentChunk);
+            currentChunk = preserveKeys ? {} : [];
+        }
+    }
+
+    // Push last chunk if not empty.
+    if (Object.keys(currentChunk).length > 0) {
+        chunks.push(currentChunk);
+    }
+
+    return chunks;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-combine.php
  * @throws If both parameters don't have equal number of elements.
  */
