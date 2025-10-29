@@ -25,6 +25,7 @@ export const PREG_SPLIT_OFFSET_CAPTURE = 4;
 export const SORT_REGULAR = 0;
 export const SORT_NUMERIC = 1;
 export const SORT_STRING = 2;
+export const SORT_LOCALE_STRING = 5;
 export const SORT_NATURAL = 6;
 export const SORT_FLAG_CASE = 8;
 export const STR_PAD_LEFT = 0;
@@ -1075,58 +1076,133 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
 }
 
 /**
+ * @link https://php.net/manual/en/function.arsort.php
+ */
+export function arsort(
+    array: any[] | Record<string, any>,
+    flags:
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+        | number = SORT_REGULAR,
+): true {
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
+
+    const sortedEntries = Object.entries(array).sort(([, a], [, b]) => {
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(b) - Number(a);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(b).toLocaleLowerCase().localeCompare(String(a).toLocaleLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase(), undefined, { numeric: true })
+                    : String(b).localeCompare(String(a), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return b - a;
+                }
+
+                if (a === b) {
+                    return 0;
+                }
+
+                return a > b ? -1 : 1;
+        }
+    });
+
+    if (Array.isArray(array)) {
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+    } else {
+        for (const key of Object.keys(array)) {
+            delete (array as Record<string, any>)[key];
+        }
+
+        for (const [key, value] of sortedEntries) {
+            (array as Record<string, any>)[key] = value;
+        }
+    }
+
+    return true;
+}
+
+/**
  * @link https://php.net/manual/en/function.asort.php
  */
 export function asort(
     array: any[] | Record<string, any>,
-    sortFlags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING | typeof SORT_FLAG_CASE = SORT_REGULAR,
+    flags:
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+        | number = SORT_REGULAR,
 ): true {
-    const sortedEntries = Object.entries(array).sort((a: [string, any], b: [string, any]): number => {
-        let [_, valA] = a;
-        let [__, valB] = b;
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
 
-        switch (sortFlags) {
+    const sortedEntries = Object.entries(array).sort(([, a]: [string, any], [, b]: [string, any]): number => {
+        switch (baseFlag) {
             case SORT_NUMERIC:
-                valA = Number(valA);
-                valB = Number(valB);
-                break;
+                return Number(a) - Number(b);
             case SORT_STRING:
-                valA = String(valA);
-                valB = String(valB);
-                break;
-            case SORT_FLAG_CASE:
-                valA = String(valA).toLowerCase();
-                valB = String(valB).toLowerCase();
-                break;
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(a).toLocaleLowerCase().localeCompare(String(b).toLocaleLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase(), undefined, { numeric: true })
+                    : String(a).localeCompare(String(b), undefined, { numeric: true });
             case SORT_REGULAR:
             default:
-                break;
-        }
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
 
-        if (valA < valB) {
-            return -1;
-        }
+                if (a === b) {
+                    return 0;
+                }
 
-        if (valA > valB) {
-            return 1;
+                return b > a ? -1 : 1;
         }
-
-        return 0;
     });
 
-    const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+    if (Array.isArray(array)) {
+        array.length = 0;
 
-    for (const [key, value] of sortedEntries) {
-        if (Array.isArray(result)) {
-            result.push(value);
-        } else {
-            (result as Record<string, any>)[key] = value;
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+    } else {
+        for (const key of Object.keys(array)) {
+            delete (array as Record<string, any>)[key];
+        }
+
+        for (const [key, value] of sortedEntries) {
+            (array as Record<string, any>)[key] = value;
         }
     }
-
-    // Mutate the original array (PHP-style).
-    Object.keys(array).forEach((k) => delete (array as any)[k]);
-    Object.assign(array, result);
 
     return true;
 }
@@ -1564,6 +1640,34 @@ export function in_array(needle: any, haystack: any[] | Record<string, any>, str
     }
 
     return false;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.intval.php
+ */
+export function intval(value: any, base: number = 10): number {
+    if (typeof value === 'boolean') {
+        return value ? 1 : 0;
+    }
+
+    if (typeof value === 'number') {
+        return Math.trunc(value);
+    }
+
+    if (typeof value === 'string') {
+        // Trim and handle base detection like PHP.
+        const trimmed = value.trim();
+
+        if (trimmed === '') {
+            return 0;
+        }
+
+        const parsed = parseInt(trimmed, base);
+
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    return 0;
 }
 
 /**
@@ -2640,39 +2744,45 @@ export function range(start: number | string, end: number | string, step: number
  */
 export function rsort(
     array: any[] | Record<string, any>,
-    flags: (
+    flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
         | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
         | typeof SORT_NATURAL
         | typeof SORT_FLAG_CASE
-    )[] = [SORT_STRING],
+        | number = SORT_REGULAR,
 ): true {
-    const flagCase = in_array(SORT_FLAG_CASE, flags);
-    const numeric = in_array(SORT_NUMERIC, flags);
-    const string = in_array(SORT_STRING, flags);
-    const natural = in_array(SORT_NATURAL, flags);
-
-    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
     const sort = (a: any, b: any) => {
-        if (a == null) {
-            a = '';
-        }
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(b) - Number(a);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(b).toLocaleLowerCase().localeCompare(String(a).toLocaleLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase(), undefined, { numeric: true })
+                    : String(b).localeCompare(String(a), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return b - a;
+                }
 
-        if (b == null) {
-            b = '';
-        }
+                if (a === b) {
+                    return 0;
+                }
 
-        let cmp: number;
-        if (numeric) {
-            cmp = parseFloat(a) - parseFloat(b);
-        } else if (string || natural) {
-            cmp = collator.compare(String(a), String(b));
-        } else {
-            cmp = a == b ? 0 : a > b ? 1 : -1;
+                return a > b ? -1 : 1;
         }
-
-        return -cmp; // Reverse order for rsort
     };
 
     if (Array.isArray(array)) {
@@ -2711,50 +2821,45 @@ export function rtrim(string: string, characters?: string): string {
  */
 export function sort(
     array: any[] | Record<string, any>,
-    flags: (
+    flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
         | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
         | typeof SORT_NATURAL
         | typeof SORT_FLAG_CASE
-    )[] = [SORT_REGULAR],
+        | number = SORT_REGULAR,
 ): true {
-    const flagCase = in_array(SORT_FLAG_CASE, flags);
-    const numeric = in_array(SORT_NUMERIC, flags);
-    const string = in_array(SORT_STRING, flags);
-    const natural = in_array(SORT_NATURAL, flags);
-
-    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
     const sort = (a: any, b: any) => {
-        // Handle undefined/null same as PHP (treat as empty string).
-        if (a == null) {
-            a = '';
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(a) - Number(b);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(a).toLocaleLowerCase().localeCompare(String(b).toLocaleLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase(), undefined, { numeric: true })
+                    : String(a).localeCompare(String(b), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
+
+                if (a === b) {
+                    return 0;
+                }
+
+                return b > a ? -1 : 1;
         }
-
-        if (b == null) {
-            b = '';
-        }
-
-        if (numeric) {
-            const na = parseFloat(a);
-            const nb = parseFloat(b);
-
-            return na - nb;
-        }
-
-        if (string || natural) {
-            const sa = String(a);
-            const sb = String(b);
-
-            return collator.compare(sa, sb);
-        }
-
-        // Default PHP regular comparison.
-        if (a == b) {
-            return 0;
-        }
-
-        return a > b ? 1 : -1;
     };
 
     if (Array.isArray(array)) {
@@ -3001,6 +3106,27 @@ export function str_word_count(
 }
 
 /**
+ * @link https://php.net/manual/en/function.strcasecmp.php
+ */
+export function strcasecmp(string1: string, string2: string): number {
+    return string1.localeCompare(string2, undefined, { sensitivity: 'accent' });
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strcmp.php
+ */
+export function strcmp(string1: string, string2: string): number {
+    return string1 === string2 ? 0 : string1 > string2 ? 1 : -1;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strcoll.php
+ */
+export function strcoll(string1: string, string2: string): number {
+    return string1.localeCompare(string2);
+}
+
+/**
  * @link https://php.net/manual/en/function.strip-tags.php
  */
 export function strip_tags(string: string, allowedTags: string | string[] = ''): string {
@@ -3039,6 +3165,22 @@ export function strip_tags(string: string, allowedTags: string | string[] = ''):
  */
 export function strlen(string: string): number {
     return new TextEncoder().encode(string).length;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strnatcasecmp.php
+ */
+export function strnatcasecmp(string1: string, string2: string): number {
+    // Use localeCompare with numeric sorting enabled (natural order).
+    return string1.toLowerCase().localeCompare(string2.toLowerCase(), undefined, { numeric: true });
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strnatcmp.php
+ */
+export function strnatcmp(string1: string, string2: string): number {
+    // Use localeCompare with numeric sorting enabled (natural order).
+    return string1.localeCompare(string2, undefined, { numeric: true });
 }
 
 /**

@@ -552,6 +552,16 @@ test('array_unshift', () => {
     expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana', foo: 'bar' });
 });
 
+test('arsort', () => {
+    let fruits: any = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.arsort(fruits);
+    expect(fruits).toEqual({ a: 'orange', d: 'lemon', b: 'banana', c: 'apple' });
+
+    fruits = ['lemon', 'orange', 'banana', 'apple'];
+    php.arsort(fruits);
+    expect(fruits).toEqual(['orange', 'lemon', 'banana', 'apple']);
+});
+
 test('asort', () => {
     let fruits: any = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
     php.asort(fruits);
@@ -710,6 +720,30 @@ test('in_array', () => {
     expect(php.in_array('mac', { 0: 'Mac', 1: 'NT', 2: 'Irix', 3: 'Linux' })).toBe(false);
     expect(php.in_array('12.4', { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(false);
     expect(php.in_array(1.13, { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(true);
+});
+
+test('intval', () => {
+    expect(php.intval(42)).toEqual(42);
+    expect(php.intval(4.7)).toEqual(4);
+    expect(php.intval('42')).toEqual(42);
+    expect(php.intval('+42')).toEqual(42);
+    expect(php.intval('-42')).toEqual(-42);
+    expect(php.intval(0o42)).toEqual(34);
+    expect(php.intval('042')).toEqual(42);
+    expect(php.intval(1e10)).toEqual(10000000000);
+    expect(php.intval('1e10')).toEqual(1);
+    expect(php.intval(0x1a)).toEqual(26);
+    expect(php.intval('0x1a')).toEqual(0);
+    expect(php.intval('0x1a', 0)).toEqual(26);
+    expect(php.intval(42000000)).toEqual(42000000);
+    expect(php.intval(420000000000000000000)).toEqual(420000000000000000000);
+    expect(php.intval('420000000000000000000')).toEqual(420000000000000000000);
+    expect(php.intval(42, 8)).toEqual(42);
+    expect(php.intval('42', 8)).toEqual(34);
+    expect(php.intval([])).toEqual(0);
+    expect(php.intval(['foo', 'bar'])).toEqual(0);
+    expect(php.intval(false)).toEqual(0);
+    expect(php.intval(true)).toEqual(1);
 });
 
 test('isset', () => {
@@ -957,7 +991,7 @@ test('rsort', () => {
 
     let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
-    php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.rsort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual(['orange20', 'Orange3', 'orange2', 'Orange1']);
 
@@ -969,7 +1003,7 @@ test('rsort', () => {
 
     fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
 
-    php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.rsort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual({ 0: 'orange20', 1: 'Orange3', 2: 'orange2', 3: 'Orange1' });
 });
@@ -990,7 +1024,7 @@ test('sort', () => {
 
     let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
-    php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.sort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual(['Orange1', 'orange2', 'Orange3', 'orange20']);
 
@@ -1002,7 +1036,7 @@ test('sort', () => {
 
     fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
 
-    php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.sort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual({ 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' });
 });
@@ -1051,6 +1085,26 @@ test('str_word_count', () => {
     expect(php.str_word_count(str, 1, 'àáãç3')).toEqual(['Hello', 'fri3nd', 'you', 're', 'looking', 'good', 'today']);
 });
 
+test('strcasecmp', () => {
+    expect(php.strcasecmp('Hello', 'hello')).toEqual(0);
+    expect(php.strcasecmp('foo', 'bar')).toEqual(1);
+    expect(php.strcasecmp('bar', 'foo')).toEqual(-1);
+});
+
+test('strcmp', () => {
+    expect(php.strcmp('hello', 'hello')).toEqual(0);
+    expect(php.strcmp('Hello', 'hello')).toEqual(-1);
+    expect(php.strcmp('foo', 'bar')).toEqual(1);
+    expect(php.strcmp('bar', 'foo')).toEqual(-1);
+});
+
+test('strcoll', () => {
+    expect(php.strcoll('hello', 'hello')).toEqual(0);
+    expect(php.strcoll('Hello', 'hello')).toEqual(1);
+    expect(php.strcoll('foo', 'bar')).toEqual(1);
+    expect(php.strcoll('bar', 'foo')).toEqual(-1);
+});
+
 test('strip_tags', () => {
     expect(php.strip_tags('<p>Test paragraph.</p><!-- Comment --> <a href="#fragment">Other text</a>')).toBe(
         'Test paragraph. Other text',
@@ -1068,6 +1122,18 @@ test('strip_tags', () => {
 test('strlen', () => {
     expect(php.strlen('abcdef')).toBe(6);
     expect(php.strlen(' ab cd ')).toBe(7);
+});
+
+test('strnatcmp', () => {
+    expect(php.strnatcmp('Apple', 'Banana')).toEqual(-1);
+    expect(php.strnatcmp('Banana', 'Apple')).toEqual(1);
+    expect(php.strnatcmp('apple', 'Apple')).toEqual(-1);
+});
+
+test('strnatcasecmp', () => {
+    expect(php.strnatcasecmp('Apple', 'Banana')).toEqual(-1);
+    expect(php.strnatcasecmp('Banana', 'Apple')).toEqual(1);
+    expect(php.strnatcasecmp('apple', 'Apple')).toEqual(0);
 });
 
 test('strpos', () => {
@@ -1132,13 +1198,13 @@ test('trim', () => {
 });
 
 test('uasort', () => {
-    function cmp(a: any, b: any) {
+    const cmp = (a: any, b: any) => {
         if (a == b) {
             return 0;
         }
 
         return a < b ? -1 : 1;
-    }
+    };
 
     let array: any = { a: 4, b: 8, c: -1, d: -9, e: 2, f: 5, g: 3, h: -4 };
     php.uasort(array, cmp);
