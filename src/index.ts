@@ -682,6 +682,51 @@ export function array_merge_recursive(...arrays: (any[] | Record<string, any>)[]
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-pad.php
+ */
+export function array_pad(array: any[] | Record<string, any>, length: number, value: any): any[] | Record<string, any> {
+    if (Math.abs(length) <= Object.values(array).length) {
+        return array;
+    }
+
+    const isArray = Array.isArray(array);
+    let result = isArray ? [] : {};
+    let numericIndex = 0;
+
+    if (length > 0) {
+        // Reindex numeric keys.
+        for (const [key, value] of Object.entries(array)) {
+            // If it's a string key, just add the value. Otherwise, reindex the value.
+            if (isNaN(Number(key))) {
+                (result as Record<string, any>)[key] = value;
+            } else {
+                (result as any[])[numericIndex] = value;
+                numericIndex++;
+            }
+        }
+    }
+
+    for (let times = 1; times <= Math.abs(length) - Object.values(array).length; times++) {
+        (result as any)[numericIndex] = value;
+        numericIndex++;
+    }
+
+    if (length < 0) {
+        for (const [key, value] of Object.entries(array)) {
+            // If it's a string key, just add the value. Otherwise, reindex the value.
+            if (isNaN(Number(key))) {
+                (result as Record<string, any>)[key] = value;
+            } else {
+                (result as any[])[numericIndex] = value;
+                numericIndex++;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-pop.php
  */
 export function array_pop(array: any[] | Record<string, any>): any {
@@ -940,6 +985,52 @@ export function array_slice(
     }
 
     return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-splice.php
+ */
+export function array_splice(
+    array: any[] | Record<string, any>,
+    offset: number,
+    length?: number,
+    replacement: any[] = [],
+): any[] {
+    let isArray = Array.isArray(array);
+
+    // Convert object to array of values.
+    let values = isArray ? (array as any[]) : Object.values(array);
+
+    const arrLength = values.length;
+
+    // Handle negative offsets.
+    if (offset < 0) {
+        offset = arrLength + offset;
+        if (offset < 0) offset = 0;
+    }
+
+    // Default length: remove until end.
+    if (length === undefined) {
+        length = arrLength - offset;
+    } else if (length < 0) {
+        length = Math.max(0, arrLength - offset + length);
+    }
+
+    // Extract removed portion.
+    const removed = values.slice(offset, offset + length);
+
+    // Perform splice.
+    values.splice(offset, length, ...replacement);
+
+    // Mutate the original input.
+    if (!isArray) {
+        // Clear and repopulate object with reindexed keys.
+        const obj = array as Record<string, any>;
+        for (const key in obj) delete obj[key];
+        values.forEach((value, i) => (obj[i] = value));
+    }
+
+    return removed;
 }
 
 /**
@@ -1725,7 +1816,7 @@ export function ksort(
     const sortedEntries = Object.entries(array).sort(([a], [b]) => compareKeys(a, b, flags));
 
     if (Array.isArray(array)) {
-        // Clear and reassign values in place
+        // Clear and reassign values in place.
         array.length = 0;
 
         for (const [, value] of sortedEntries) {
@@ -1735,7 +1826,7 @@ export function ksort(
         return true;
     }
 
-    // Delete all keys, then reassign in sorted order
+    // Delete all keys, then reassign in sorted order.
     for (const key of Object.keys(array)) {
         delete array[key];
     }
@@ -2790,7 +2881,7 @@ export function rsort(
     } else {
         const sorted = Object.values(array).sort(sort);
 
-        // Reindex keys numerically
+        // Reindex keys numerically.
         for (let i = 0; i < sorted.length; i++) {
             array[i] = sorted[i];
         }
@@ -3517,6 +3608,35 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
     const re = new RegExp(`(^|[${escapedSeparators}])([^${escapedSeparators}])`, 'g');
 
     return string.replace(re, (_match, before, ch) => before + ch.toUpperCase());
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.uksort.php
+ */
+export function uksort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
+    const sortedEntries = Object.entries(array).sort(([a], [b]) => callback(a, b));
+
+    if (Array.isArray(array)) {
+        // Clear and reassign values in place.
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+
+        return true;
+    }
+
+    // Delete all keys, then reassign in sorted order.
+    for (const key of Object.keys(array)) {
+        delete array[key];
+    }
+
+    for (const [key, value] of sortedEntries) {
+        array[key] = value;
+    }
+
+    return true;
 }
 
 /**
