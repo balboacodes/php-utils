@@ -43,12 +43,85 @@ test('array_any', () => {
     expect(php.array_any(object, (_, key) => typeof key !== 'string')).toBe(false);
 });
 
+test('array_chunk', () => {
+    let input_array: any = ['a', 'b', 'c', 'd', 'e'];
+    expect(php.array_chunk(input_array, 2)).toEqual([['a', 'b'], ['c', 'd'], ['e']]);
+    expect(php.array_chunk(input_array, 2, true)).toEqual([{ 0: 'a', 1: 'b' }, { 2: 'c', 3: 'd' }, { 4: 'e' }]);
+
+    input_array = { a: 1, b: 2, c: 3, d: 4, e: 5 };
+    expect(php.array_chunk(input_array, 2)).toEqual([[1, 2], [3, 4], [5]]);
+    expect(php.array_chunk(input_array, 2, true)).toEqual([{ a: 1, b: 2 }, { c: 3, d: 4 }, { e: 5 }]);
+});
+
 test('array_combine', () => {
     expect(php.array_combine(['green', 'red', 'yellow'], ['avocado', 'apple', 'banana'])).toEqual({
         green: 'avocado',
         red: 'apple',
         yellow: 'banana',
     });
+});
+
+test('array_diff', () => {
+    const array1 = { a: 'green', 0: 'red', 1: 'blue', 2: 'red' };
+    const array2 = { b: 'green', 1: 'yellow', 2: 'red' };
+    expect(php.array_diff(array1, array2)).toEqual({ 1: 'blue' });
+
+    const source = [1, 2, 3, 4];
+    const filter = [3, 4, [5], 6];
+    expect(php.array_diff(source, filter)).toEqual([1, 2]);
+});
+
+test('array_diff_assoc', () => {
+    let array1: any = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    let array2: any = { a: 'green', 0: 'yellow', 1: 'red' };
+    expect(php.array_diff_assoc(array1, array2)).toEqual({ b: 'brown', c: 'blue', 0: 'red' });
+
+    array1 = [0, 1, 2];
+    array2 = ['00', '01', '2'];
+    expect(php.array_diff_assoc(array1, array2)).toEqual([0, 1, 2]);
+});
+
+test('array_diff_key', () => {
+    let array1 = { blue: 1, red: 2, green: 3, purple: 4 };
+    let array2 = { green: 5, yellow: 7, cyan: 8 };
+    expect(php.array_diff_key(array1, array2)).toEqual({ blue: 1, red: 2, purple: 4 });
+
+    array1 = { blue: 1, red: 2, green: 3, purple: 4 };
+    array2 = { green: 5, yellow: 7, cyan: 8 };
+    const array3 = { blue: 6, yellow: 7, mauve: 8 };
+    expect(php.array_diff_key(array1, array2, array3)).toEqual({ red: 2, purple: 4 });
+});
+
+test('array_diff_uassoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'green', 0: 'yellow', 1: 'red' };
+    const key_compare_func = (a: string, b: string) => {
+        if (a === b) {
+            return 0;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
+
+    expect(php.array_diff_uassoc(array1, array2, key_compare_func)).toEqual({ b: 'brown', c: 'blue', 0: 'red' });
+});
+
+test('array_diff_ukey', () => {
+    const array1: any = { blue: 1, red: 2, green: 3, purple: 4 };
+    const array2: any = { green: 5, blue: 6, yellow: 7, cyan: 8 };
+    const key_compare_func = (key1: string, key2: string) => {
+        if (key1 === key2) {
+            return 0;
+        } else if (key1 > key2) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
+
+    expect(php.array_diff_ukey(array1, array2, key_compare_func)).toEqual({ red: 2, purple: 4 });
 });
 
 test('array_filter', () => {
@@ -85,6 +158,20 @@ test('array_flip', () => {
     expect(php.array_flip({ a: 0, b: 1, c: 2 })).toEqual({ 0: 'a', 1: 'b', 2: 'c' });
 });
 
+test('array_intersect', () => {
+    const array1 = { a: 'green', 0: 'red', 1: 'blue' };
+    const array2 = { b: 'green', 0: 'yellow', 1: 'red' };
+
+    expect(php.array_intersect(array1, array2)).toEqual({ a: 'green', 0: 'red' });
+});
+
+test('array_intersect_assoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'green', b: 'yellow', 0: 'blue', 1: 'red' };
+
+    expect(php.array_intersect_assoc(array1, array2)).toEqual({ a: 'green' });
+});
+
 test('array_intersect_key', () => {
     expect(php.array_intersect_key(['blue', 'red', 'green', 'purple'], ['green', 'blue', 'yellow', 'cyan'])).toEqual([
         'blue',
@@ -95,6 +182,15 @@ test('array_intersect_key', () => {
     expect(
         php.array_intersect_key({ blue: 1, red: 2, green: 3, purple: 4 }, { green: 5, blue: 6, yellow: 7, cyan: 8 }),
     ).toEqual({ blue: 1, green: 3 });
+});
+
+test('array_intersect_uassoc', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'GREEN', B: 'brown', 0: 'yellow', 1: 'red' };
+
+    expect(
+        php.array_intersect_uassoc(array1, array2, (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
+    ).toEqual({ b: 'brown' });
 });
 
 test('array_key_first', () => {
@@ -188,15 +284,40 @@ test('array_merge', () => {
     ).toEqual({ color: 'green', 0: 2, 1: 4, 2: 'a', 3: 'b', shape: 'trapezoid', 4: 4 });
 });
 
+test('array_merge_recursive', () => {
+    const ar1 = { color: { favorite: 'red' }, 0: 5 };
+    const ar2 = { 0: 10, color: { favorite: 'green', 0: 'blue' } };
+    expect(php.array_merge_recursive(ar1, ar2)).toEqual({
+        color: { favorite: ['red', 'green'], 0: 'blue' },
+        0: [5, 10],
+    });
+
+    const ar3 = { color: { favorite: 'red' } };
+    const ar4 = { color: 'green' };
+    expect(php.array_merge_recursive(ar3, ar4)).toEqual({
+        color: { favorite: 'red', 0: 'green' },
+    });
+});
+
+test('array_pad', () => {
+    const input = [12, 10, 9];
+    expect(php.array_pad(input, 5, 0)).toEqual([12, 10, 9, 0, 0]);
+    expect(php.array_pad(input, -7, -1)).toEqual([-1, -1, -1, -1, 12, 10, 9]);
+    expect(php.array_pad(input, 2, 'noop')).toEqual([12, 10, 9]);
+
+    const obj = { 1: 12, foo: 10, bar: 9 };
+    expect(php.array_pad(obj, 5, 0)).toEqual({ 0: 12, foo: 10, bar: 9, 1: 0, 2: 0 });
+    expect(php.array_pad(obj, -7, -1)).toEqual({ 0: -1, 1: -1, 2: -1, 3: -1, 4: 12, foo: 10, bar: 9 });
+    expect(php.array_pad(obj, 2, 'noop')).toEqual({ 1: 12, foo: 10, bar: 9 });
+});
+
 test('array_pop', () => {
     const array = ['orange', 'banana', 'apple', 'raspberry'];
-
     expect(php.array_pop(array)).toBe('raspberry');
     expect(array).toEqual(['orange', 'banana', 'apple']);
     expect(php.array_pop([])).toBe(null);
 
     const obj = { 0: 'orange', 1: 'banana', 2: 'apple', 3: 'raspberry' };
-
     expect(php.array_pop(obj)).toBe('raspberry');
     expect(obj).toEqual({ 0: 'orange', 1: 'banana', 2: 'apple' });
     expect(php.array_pop({})).toBe(null);
@@ -204,12 +325,10 @@ test('array_pop', () => {
 
 test('array_push', () => {
     const array = ['orange', 'banana'];
-
     expect(php.array_push(array, 'apple', 'raspberry')).toBe(4);
     expect(array).toEqual(['orange', 'banana', 'apple', 'raspberry']);
 
     const obj = { 0: 'orange', 1: 'banana' };
-
     expect(php.array_push(obj, 'apple', 'raspberry')).toBe(4);
     expect(obj).toEqual({ 0: 'orange', 1: 'banana', 2: 'apple', 3: 'raspberry' });
 });
@@ -221,6 +340,81 @@ test('array_reduce', () => {
     expect(php.array_reduce({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (carry, item) => (carry += item))).toBe(15);
     expect(php.array_reduce({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }, (carry, item) => (carry *= item), 10)).toBe(1200);
     expect(php.array_reduce({}, (carry, item) => (carry += item), 'No data to reduce')).toBe('No data to reduce');
+});
+
+test('array_replace', () => {
+    let base: any = ['orange', 'banana', 'apple', 'raspberry'];
+    let replacements: any = { 0: 'pineapple', 4: 'cherry' };
+    let replacements2: any = ['grape'];
+
+    expect(php.array_replace(base, replacements, replacements2)).toEqual([
+        'grape',
+        'banana',
+        'apple',
+        'raspberry',
+        'cherry',
+    ]);
+
+    base = { citrus: ['orange', 'lemon'], pome: ['apple'] };
+    replacements = { citrus: ['grapefruit'] };
+    replacements2 = { citrus: ['kumquat', 'citron'], pome: ['loquat'] };
+
+    expect(php.array_replace(base, replacements, replacements2)).toEqual({
+        citrus: ['kumquat', 'citron'],
+        pome: ['loquat'],
+    });
+});
+
+test('array_replace_recursive', () => {
+    let base: any = { citrus: ['orange'], berries: ['blackberry', 'raspberry'] };
+    let replacements: any = { citrus: ['pineapple'], berries: ['blueberry'] };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'], others: 'banana' };
+    replacements = { citrus: 'pineapple', berries: ['blueberry'], others: ['litchis'] };
+    let replacements2 = { citrus: ['pineapple'], berries: ['blueberry'], others: 'litchis' };
+    expect(php.array_replace_recursive(base, replacements, replacements2)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+        others: 'litchis',
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'] };
+    replacements = [['pineapple'], ['blueberry']];
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        citrus: ['orange'],
+        berries: ['blackberry', 'raspberry'],
+        0: ['pineapple'],
+        1: ['blueberry'],
+    });
+
+    base = [['orange'], ['blackberry', 'raspberry']];
+    replacements = { citrus: ['pineapple'], berries: ['blueberry'] };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({
+        0: ['orange'],
+        1: ['blackberry', 'raspberry'],
+        citrus: ['pineapple'],
+        berries: ['blueberry'],
+    });
+
+    base = { citrus: ['orange'], berries: ['blackberry', 'raspberry'], others: 'banana' };
+    replacements = ['pineapple', ['blueberry'], ['litchis']];
+    replacements2 = { citrus: ['pineapple'], berries: ['blueberry'], others: 'litchis' };
+    expect(php.array_replace_recursive(base, replacements, replacements2)).toEqual({
+        citrus: ['pineapple'],
+        berries: ['blueberry', 'raspberry'],
+        others: 'litchis',
+        0: 'pineapple',
+        1: ['blueberry'],
+        2: ['litchis'],
+    });
+
+    base = ['a', 'b', ['c', 'd']];
+    replacements = { 0: 'z', 2: { 1: 'e' } };
+    expect(php.array_replace_recursive(base, replacements)).toEqual({ 0: 'z', 1: 'b', 2: { 0: 'c', 1: 'e' } });
 });
 
 test('array_reverse', () => {
@@ -245,6 +439,16 @@ test('array_reverse', () => {
         2: { 0: 'green', 1: 'red' },
         foo: 'php',
     });
+});
+
+test('array_search', () => {
+    const array = ['blue', 'red', 'green', 'red'];
+    expect(php.array_search('green', array)).toEqual(2);
+    expect(php.array_search('pink', array)).toEqual(false);
+
+    const obj = { foo: 'bar', bar: 'baz' };
+    expect(php.array_search('bar', obj)).toEqual('foo');
+    expect(php.array_search('buzz', obj)).toEqual(false);
 });
 
 test('array_shift', () => {
@@ -278,6 +482,104 @@ test('array_slice', () => {
     expect(php.array_slice(obj, 2, -1, true)).toEqual({ 2: 'c', 3: 'd' });
 });
 
+test('array_splice', () => {
+    let input = ['red', 'green', 'blue', 'yellow'];
+    expect(php.array_splice(input, 2)).toEqual(['blue', 'yellow']);
+    expect(input).toEqual(['red', 'green']);
+
+    input = ['red', 'green', 'blue', 'yellow'];
+    expect(php.array_splice(input, 1, -1)).toEqual(['green', 'blue']);
+    expect(input).toEqual(['red', 'yellow']);
+
+    input = ['red', 'green', 'blue', 'yellow'];
+    expect(php.array_splice(input, 1, php.count(input), ['orange'])).toEqual(['green', 'blue', 'yellow']);
+    expect(input).toEqual(['red', 'orange']);
+
+    input = ['red', 'green', 'blue', 'yellow'];
+    expect(php.array_splice(input, -1, 1, ['black', 'maroon'])).toEqual(['yellow']);
+    expect(input).toEqual(['red', 'green', 'blue', 'black', 'maroon']);
+
+    let obj = { 0: 'blue', 1: 'red', foo: 'green', bar: 'yellow' };
+    expect(php.array_splice(obj, 2)).toEqual(['green', 'yellow']);
+    expect(obj).toEqual({ 0: 'blue', 1: 'red' });
+
+    obj = { 0: 'blue', 1: 'red', foo: 'green', bar: 'yellow' };
+    expect(php.array_splice(obj, 1, -1)).toEqual(['red', 'green']);
+    expect(obj).toEqual({ 0: 'blue', 1: 'yellow' });
+
+    obj = { 0: 'blue', 1: 'red', foo: 'green', bar: 'yellow' };
+    expect(php.array_splice(obj, 1, php.count(obj), ['orange'])).toEqual(['red', 'green', 'yellow']);
+    expect(obj).toEqual({ 0: 'blue', 1: 'orange' });
+
+    obj = { 0: 'blue', 1: 'red', foo: 'green', bar: 'yellow' };
+    expect(php.array_splice(obj, -1, 1, ['black', 'maroon'])).toEqual(['yellow']);
+    expect(obj).toEqual({ 0: 'blue', 1: 'red', 2: 'green', 3: 'black', 4: 'maroon' });
+});
+
+test('array_udiff', () => {
+    let array1: any = [
+        { width: 11, height: 3 },
+        { width: 7, height: 1 },
+        { width: 2, height: 9 },
+        { width: 5, height: 7 },
+    ];
+
+    let array2: any = [
+        { width: 7, height: 5 },
+        { width: 9, height: 2 },
+    ];
+
+    const compare_by_area = (a: Record<string, number>, b: Record<string, number>): 1 | 0 | -1 => {
+        const areaA = a.width * a.height;
+        const areaB = b.width * b.height;
+
+        if (areaA < areaB) {
+            return -1;
+        } else if (areaA > areaB) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
+    expect(php.array_udiff(array1, array2, compare_by_area)).toEqual([
+        { width: 11, height: 3 },
+        { width: 7, height: 1 },
+    ]);
+});
+
+test('array_uintersect', () => {
+    const array1 = { a: 'green', b: 'brown', c: 'blue', 0: 'red' };
+    const array2 = { a: 'GREEN', B: 'brown', 0: 'yellow', 1: 'red' };
+
+    expect(php.array_uintersect(array1, array2, (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))).toEqual({
+        a: 'green',
+        b: 'brown',
+        0: 'red',
+    });
+});
+
+test('array_unique', () => {
+    let input: any = { a: 'green', 0: 'red', b: 'green', 1: 'blue', 2: 'red' };
+    expect(php.array_unique(input)).toEqual({ a: 'green', 0: 'red', 1: 'blue' });
+
+    input = [4, '4', '3', 4, 3, '3'];
+    expect(php.array_unique(input)).toEqual([4, '3']);
+
+    input = [
+        [1, 2],
+        [1, 2],
+        [2, 3],
+        [3, 4],
+        [2, 3],
+    ];
+    expect(php.array_unique(input)).toEqual([
+        [1, 2],
+        [2, 3],
+        [3, 4],
+    ]);
+});
+
 test('array_unshift', () => {
     const array = ['orange', 'banana'];
     expect(php.array_unshift(array, 'apple', 'raspberry')).toBe(4);
@@ -290,6 +592,26 @@ test('array_unshift', () => {
     obj = { 0: 'orange', foo: 'bar', 1: 'banana' };
     expect(php.array_unshift(obj, 'apple', 'raspberry')).toBe(5);
     expect(obj).toEqual({ 0: 'apple', 1: 'raspberry', 2: 'orange', 3: 'banana', foo: 'bar' });
+});
+
+test('arsort', () => {
+    let fruits: any = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.arsort(fruits);
+    expect(fruits).toEqual({ a: 'orange', d: 'lemon', b: 'banana', c: 'apple' });
+
+    fruits = ['lemon', 'orange', 'banana', 'apple'];
+    php.arsort(fruits);
+    expect(fruits).toEqual(['orange', 'lemon', 'banana', 'apple']);
+});
+
+test('asort', () => {
+    let fruits: any = { d: 'lemon', a: 'orange', b: 'banana', c: 'apple' };
+    php.asort(fruits);
+    expect(fruits).toEqual({ c: 'apple', b: 'banana', d: 'lemon', a: 'orange' });
+
+    fruits = ['lemon', 'orange', 'banana', 'apple'];
+    php.asort(fruits);
+    expect(fruits).toEqual(['apple', 'banana', 'lemon', 'orange']);
 });
 
 test('base64_decode', () => {
@@ -440,6 +762,30 @@ test('in_array', () => {
     expect(php.in_array('mac', { 0: 'Mac', 1: 'NT', 2: 'Irix', 3: 'Linux' })).toBe(false);
     expect(php.in_array('12.4', { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(false);
     expect(php.in_array(1.13, { 0: '1.10', 1: 12.4, 2: 1.13 }, true)).toBe(true);
+});
+
+test('intval', () => {
+    expect(php.intval(42)).toEqual(42);
+    expect(php.intval(4.7)).toEqual(4);
+    expect(php.intval('42')).toEqual(42);
+    expect(php.intval('+42')).toEqual(42);
+    expect(php.intval('-42')).toEqual(-42);
+    expect(php.intval(0o42)).toEqual(34);
+    expect(php.intval('042')).toEqual(42);
+    expect(php.intval(1e10)).toEqual(10000000000);
+    expect(php.intval('1e10')).toEqual(1);
+    expect(php.intval(0x1a)).toEqual(26);
+    expect(php.intval('0x1a')).toEqual(0);
+    expect(php.intval('0x1a', 0)).toEqual(26);
+    expect(php.intval(42000000)).toEqual(42000000);
+    expect(php.intval(420000000000000000000)).toEqual(420000000000000000000);
+    expect(php.intval('420000000000000000000')).toEqual(420000000000000000000);
+    expect(php.intval(42, 8)).toEqual(42);
+    expect(php.intval('42', 8)).toEqual(34);
+    expect(php.intval([])).toEqual(0);
+    expect(php.intval(['foo', 'bar'])).toEqual(0);
+    expect(php.intval(false)).toEqual(0);
+    expect(php.intval(true)).toEqual(1);
 });
 
 test('isset', () => {
@@ -663,6 +1009,21 @@ test('random_int', () => {
     expect(php.random_int(100, 999)).toBeTypeOf('number');
 });
 
+test('range', () => {
+    expect(php.range(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(php.range(5, 1)).toEqual([5, 4, 3, 2, 1]);
+    expect(php.range(5, 1, -1)).toEqual([5, 4, 3, 2, 1]);
+    expect(php.range(0, 10, 2)).toEqual([0, 2, 4, 6, 8, 10]);
+    expect(php.range(10, 0, 2)).toEqual([10, 8, 6, 4, 2, 0]);
+
+    expect(php.range('a', 'i')).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
+    expect(php.range('c', 'a')).toEqual(['c', 'b', 'a']);
+
+    expect(() => php.range(1, 5, 0)).toThrow('range(): Step cannot be 0');
+    expect(() => php.range(1, 5, -1)).toThrow('range(): Step must be greater than 0 for increasing ranges');
+    expect(() => php.range(1, 'a')).toThrow('range(): Both start and end parameters must be of the same type');
+});
+
 test('rsort', () => {
     let array: any = ['lemon', 'orange', 'banana', 'apple'];
 
@@ -672,7 +1033,7 @@ test('rsort', () => {
 
     let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
-    php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.rsort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual(['orange20', 'Orange3', 'orange2', 'Orange1']);
 
@@ -684,7 +1045,7 @@ test('rsort', () => {
 
     fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
 
-    php.rsort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.rsort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual({ 0: 'orange20', 1: 'Orange3', 2: 'orange2', 3: 'Orange1' });
 });
@@ -705,7 +1066,7 @@ test('sort', () => {
 
     let fruits: any = ['Orange1', 'orange2', 'Orange3', 'orange20'];
 
-    php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.sort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual(['Orange1', 'orange2', 'Orange3', 'orange20']);
 
@@ -717,7 +1078,7 @@ test('sort', () => {
 
     fruits = { 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' };
 
-    php.sort(fruits, [php.SORT_NATURAL, php.SORT_FLAG_CASE]);
+    php.sort(fruits, php.SORT_NATURAL | php.SORT_FLAG_CASE);
 
     expect(fruits).toEqual({ 0: 'Orange1', 1: 'orange2', 2: 'Orange3', 3: 'orange20' });
 });
@@ -766,6 +1127,26 @@ test('str_word_count', () => {
     expect(php.str_word_count(str, 1, 'àáãç3')).toEqual(['Hello', 'fri3nd', 'you', 're', 'looking', 'good', 'today']);
 });
 
+test('strcasecmp', () => {
+    expect(php.strcasecmp('Hello', 'hello')).toEqual(0);
+    expect(php.strcasecmp('foo', 'bar')).toEqual(1);
+    expect(php.strcasecmp('bar', 'foo')).toEqual(-1);
+});
+
+test('strcmp', () => {
+    expect(php.strcmp('hello', 'hello')).toEqual(0);
+    expect(php.strcmp('Hello', 'hello')).toEqual(-1);
+    expect(php.strcmp('foo', 'bar')).toEqual(1);
+    expect(php.strcmp('bar', 'foo')).toEqual(-1);
+});
+
+test('strcoll', () => {
+    expect(php.strcoll('hello', 'hello')).toEqual(0);
+    expect(php.strcoll('Hello', 'hello')).toEqual(1);
+    expect(php.strcoll('foo', 'bar')).toEqual(1);
+    expect(php.strcoll('bar', 'foo')).toEqual(-1);
+});
+
 test('strip_tags', () => {
     expect(php.strip_tags('<p>Test paragraph.</p><!-- Comment --> <a href="#fragment">Other text</a>')).toBe(
         'Test paragraph. Other text',
@@ -783,6 +1164,18 @@ test('strip_tags', () => {
 test('strlen', () => {
     expect(php.strlen('abcdef')).toBe(6);
     expect(php.strlen(' ab cd ')).toBe(7);
+});
+
+test('strnatcmp', () => {
+    expect(php.strnatcmp('Apple', 'Banana')).toEqual(-1);
+    expect(php.strnatcmp('Banana', 'Apple')).toEqual(1);
+    expect(php.strnatcmp('apple', 'Apple')).toEqual(-1);
+});
+
+test('strnatcasecmp', () => {
+    expect(php.strnatcasecmp('Apple', 'Banana')).toEqual(-1);
+    expect(php.strnatcasecmp('Banana', 'Apple')).toEqual(1);
+    expect(php.strnatcasecmp('apple', 'Apple')).toEqual(0);
 });
 
 test('strpos', () => {
@@ -846,9 +1239,42 @@ test('trim', () => {
     expect(php.trim('\x09Example string\x0A', '\x09\x0A')).toBe('Example string');
 });
 
+test('uasort', () => {
+    const cmp = (a: any, b: any) => {
+        if (a == b) {
+            return 0;
+        }
+
+        return a < b ? -1 : 1;
+    };
+
+    let array: any = { a: 4, b: 8, c: -1, d: -9, e: 2, f: 5, g: 3, h: -4 };
+    php.uasort(array, cmp);
+    expect(array).toEqual({ d: -9, h: -4, c: -1, e: 2, g: 3, a: 4, f: 5, b: 8 });
+
+    array = [4, 8, -1, -9, 2, 5, 3, -4];
+    php.uasort(array, cmp);
+    expect(array).toEqual([-9, -4, -1, 2, 3, 4, 5, 8]);
+});
+
 test('ucwords', () => {
     expect(php.ucwords('hello world!')).toBe('Hello World!');
     expect(php.ucwords('hello|world!', '|')).toBe('Hello|World!');
+});
+
+test('uksort', () => {
+    const cmp = (a: any, b: any) => {
+        a = php.preg_replace('@^(a|an|the) @', '', a);
+        b = php.preg_replace('@^(a|an|the) @', '', b);
+
+        return php.strcasecmp(a, b);
+    };
+
+    const a = { John: 1, 'the Earth': 2, 'an apple': 3, 'a banana': 4 };
+
+    php.uksort(a, cmp);
+
+    expect(a).toEqual({ 'an apple': 3, 'a banana': 4, 'the Earth': 2, John: 1 });
 });
 
 test('unset', () => {
@@ -856,7 +1282,7 @@ test('unset', () => {
 
     php.unset(arr, 1);
 
-    expect(arr).toEqual(['foo', 'baz']);
+    expect(arr).toEqual(['foo', undefined, 'baz']);
 
     const obj = { foo: 1, bar: 2, baz: 3 };
 

@@ -1,3 +1,37 @@
+export const ARRAY_FILTER_USE_KEY = 1;
+export const ARRAY_FILTER_USE_BOTH = 2;
+export const COUNT_NORMAL = 0;
+export const COUNT_RECURSIVE = 1;
+export const FILTER_VALIDATE_INT = 257;
+export const FILTER_VALIDATE_BOOLEAN = 258;
+export const FILTER_VALIDATE_FLOAT = 259;
+export const FILTER_VALIDATE_URL = 273;
+export const FILTER_VALIDATE_EMAIL = 274;
+export const FILTER_SANITIZE_STRING = 513;
+export const FILTER_DEFAULT = 516;
+export const FILTER_UNSAFE_RAW = 516;
+export const FILTER_SANITIZE_EMAIL = 517;
+export const FILTER_SANITIZE_URL = 518;
+export const MB_CASE_UPPER = 0;
+export const MB_CASE_LOWER = 1;
+export const MB_CASE_TITLE = 2;
+export const PHP_QUERY_RFC1738 = 1;
+export const PHP_QUERY_RFC3986 = 2;
+export const PREG_SET_ORDER = 2;
+export const PREG_OFFSET_CAPTURE = 4;
+export const PREG_SPLIT_NO_EMPTY = 1;
+export const PREG_SPLIT_DELIM_CAPTURE = 2;
+export const PREG_SPLIT_OFFSET_CAPTURE = 4;
+export const SORT_REGULAR = 0;
+export const SORT_NUMERIC = 1;
+export const SORT_STRING = 2;
+export const SORT_LOCALE_STRING = 5;
+export const SORT_NATURAL = 6;
+export const SORT_FLAG_CASE = 8;
+export const STR_PAD_LEFT = 0;
+export const STR_PAD_RIGHT = 1;
+export const STR_PAD_BOTH = 2;
+
 /**
  * @link https://www.php.net/manual/en/function.array-all.php
  */
@@ -31,6 +65,45 @@ export function array_any(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-chunk.php
+ */
+export function array_chunk(
+    array: any[] | Record<string, any>,
+    length: number,
+    preserveKeys = false,
+): (any[] | Record<string, any>)[] {
+    if (length < 1) {
+        throw new RangeError('array_chunk(): Length parameter must be greater than 0');
+    }
+
+    const chunks: (any[] | Record<string, any>)[] = [];
+    let currentChunk: any = preserveKeys ? {} : [];
+    let count = 0;
+
+    for (const [key, value] of Object.entries(array)) {
+        if (preserveKeys) {
+            (currentChunk as Record<string, any>)[key] = value;
+        } else {
+            (currentChunk as any[]).push(value);
+        }
+
+        count++;
+
+        if (count % length === 0) {
+            chunks.push(currentChunk);
+            currentChunk = preserveKeys ? {} : [];
+        }
+    }
+
+    // Push last chunk if not empty.
+    if (Object.keys(currentChunk).length > 0) {
+        chunks.push(currentChunk);
+    }
+
+    return chunks;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-combine.php
  * @throws If both parameters don't have equal number of elements.
  */
@@ -56,8 +129,170 @@ export function array_combine(
     return result;
 }
 
-export const ARRAY_FILTER_USE_KEY = 1;
-export const ARRAY_FILTER_USE_BOTH = 2;
+/**
+ * @link https://www.php.net/manual/en/function.array-diff.php
+ */
+export function array_diff(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    // Flatten all comparison arrays into one set of values (non-strict).
+    const compareValues: any[] = [];
+
+    for (const arr of arrays) {
+        for (const value of Object.values(arr)) {
+            compareValues.push(value);
+        }
+    }
+
+    for (const [key, value] of Object.entries(array)) {
+        const exists = compareValues.some((v) => v === value);
+
+        if (!exists) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-assoc.php
+ */
+export function array_diff_assoc(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    for (const [key, value] of Object.entries(array)) {
+        let found = false;
+
+        for (const arr of arrays) {
+            // Ensure we’re comparing both key and value.
+            if (Object.hasOwn(arr, key)) {
+                const otherValue = (arr as any)[key];
+
+                if (otherValue === value) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-key.php
+ */
+export function array_diff_key(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    for (const [key, value] of Object.entries(array)) {
+        let found = false;
+
+        for (const arr of arrays) {
+            if (Object.hasOwn(arr, key)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            if (isArray) {
+                result.push(value);
+            } else {
+                (result as Record<string, any>)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-uassoc.php
+ */
+export function array_diff_uassoc(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const keyCompare = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            for (const [otherKey, otherValue] of Object.entries(other)) {
+                if (keyCompare(key, otherKey) === 0 && value === otherValue) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-diff-ukey.php
+ */
+export function array_diff_ukey(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const compareFn = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const arr of arrays) {
+            for (const otherKey of Object.keys(arr)) {
+                if (compareFn(key, otherKey) === 0) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
 
 /**
  * @link https://php.net/manual/en/function.array-filter.php
@@ -143,6 +378,64 @@ export function array_flip(array: any[] | Record<string, any>): Record<string, s
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-intersect.php
+ */
+export function array_intersect(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            // Convert both objects and arrays to plain value arrays for comparison.
+            const otherValues = Object.values(other);
+
+            if (!otherValues.some((v) => v === value)) {
+                // Value not found in one of the arrays.
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-intersect-assoc.php
+ */
+export function array_intersect_assoc(
+    array: any[] | Record<string, any>,
+    ...arrays: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            if ((other as any)[key] !== value) {
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
  * @throws If less than two parameters are given.
  */
@@ -167,6 +460,44 @@ export function array_intersect_key(
     }
 
     return Array.isArray(array) ? Object.values(result) : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-intersect-uassoc.php
+ */
+export function array_intersect_uassoc(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
+): any[] | Record<string, any> {
+    const keyCompareFunc = args.pop() as (a: string, b: string) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            let matched = false;
+
+            for (const [otherKey, otherValue] of Object.entries(other)) {
+                if (value === otherValue && keyCompareFunc(key, otherKey) === 0) {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -284,7 +615,7 @@ export function array_merge(...arrays: (any[] | Record<string, any>)[]): any[] |
 
     for (const arr of arrays) {
         for (const [key, value] of Object.entries(arr)) {
-            // String keys always preserved; numeric keys reindexed
+            // String keys always preserved; numeric keys reindexed.
             if (isNaN(Number(key))) {
                 result[key] = value;
             } else {
@@ -293,7 +624,106 @@ export function array_merge(...arrays: (any[] | Record<string, any>)[]): any[] |
         }
     }
 
-    return Array.isArray(Object.values(arrays)[0]) ? Object.values(result) : result;
+    return Array.isArray(arrays[0]) ? Object.values(result) : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-merge-recursive.php
+ */
+export function array_merge_recursive(...arrays: (any[] | Record<string, any>)[]): any[] | Record<string, any> {
+    if (arrays.length === 0) {
+        return [];
+    }
+
+    const result: Record<string, any> = {};
+    let numericIndex = 0;
+
+    for (const array of arrays) {
+        if (Array.isArray(array)) {
+            // Append values for numeric keys.
+            for (const value of array) {
+                result[numericIndex] = value;
+                numericIndex++;
+            }
+        } else {
+            // Merge associative (object) keys.
+            for (const [key, value] of Object.entries(array)) {
+                if (key in result) {
+                    const existing = (result as Record<string, any>)[key];
+
+                    if (isPlainObject(existing) && isPlainObject(value)) {
+                        // Recursively merge objects.
+                        (result as Record<string, any>)[key] = array_merge_recursive(existing, value);
+                    } else if (Array.isArray(existing) && Array.isArray(value)) {
+                        // Merge arrays.
+                        (result as Record<string, any>)[key] = [...existing, ...value];
+                    } else if (isPlainObject(existing) || isPlainObject(value)) {
+                        // Create new object and merge.
+                        if (isPlainObject(existing)) {
+                            const wrapped: any[] = Array.isArray(value) ? value : [value];
+                            (result as Record<string, any>)[key] = { ...existing, ...wrapped };
+                        } else {
+                            const wrapped: any[] = Array.isArray(existing) ? existing : [existing];
+                            (result as Record<string, any>)[key] = { ...[existing], ...wrapped };
+                        }
+                    } else {
+                        // Convert both to arrays and merge.
+                        (result as Record<string, any>)[key] = [].concat(existing, value);
+                    }
+                } else {
+                    // New key.
+                    (result as Record<string, any>)[key] = value;
+                }
+            }
+        }
+    }
+
+    return Array.isArray(arrays[0]) ? Object.values(result) : result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-pad.php
+ */
+export function array_pad(array: any[] | Record<string, any>, length: number, value: any): any[] | Record<string, any> {
+    if (Math.abs(length) <= Object.values(array).length) {
+        return array;
+    }
+
+    const isArray = Array.isArray(array);
+    let result = isArray ? [] : {};
+    let numericIndex = 0;
+
+    if (length > 0) {
+        // Reindex numeric keys.
+        for (const [key, value] of Object.entries(array)) {
+            // If it's a string key, just add the value. Otherwise, reindex the value.
+            if (isNaN(Number(key))) {
+                (result as Record<string, any>)[key] = value;
+            } else {
+                (result as any[])[numericIndex] = value;
+                numericIndex++;
+            }
+        }
+    }
+
+    for (let times = 1; times <= Math.abs(length) - Object.values(array).length; times++) {
+        (result as any)[numericIndex] = value;
+        numericIndex++;
+    }
+
+    if (length < 0) {
+        for (const [key, value] of Object.entries(array)) {
+            // If it's a string key, just add the value. Otherwise, reindex the value.
+            if (isNaN(Number(key))) {
+                (result as Record<string, any>)[key] = value;
+            } else {
+                (result as any[])[numericIndex] = value;
+                numericIndex++;
+            }
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -375,6 +805,67 @@ export function array_reduce(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-replace.php
+ */
+export function array_replace(
+    array: any[] | Record<string, any>,
+    ...replacements: (any[] | Record<string, any>)[]
+): any[] | Record<string, any> {
+    const result: any = Array.isArray(array) ? [...array] : { ...array };
+
+    for (const replacement of replacements) {
+        for (const [key, value] of Object.entries(replacement)) {
+            result[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-replace-recursive.php
+ */
+export function array_replace_recursive(...arrays: (any[] | Record<string, any>)[]): any[] | Record<string, any> {
+    if (arrays.length === 0) {
+        return [];
+    }
+
+    let result: any[] | Record<string, any> = Array.isArray(arrays[0]) ? [...arrays[0]] : { ...arrays[0] };
+
+    for (let i = 1; i < arrays.length; i++) {
+        const current = arrays[i];
+
+        if (!isPlainObject(current) && !Array.isArray(current)) {
+            // Replace scalar values entirely.
+            result = current;
+            continue;
+        }
+
+        if (isPlainObject(current) && !isPlainObject(result)) {
+            // Convert arrays or scalar into objects before merge.
+            result = Array.isArray(result) ? Object.assign({}, result) : { 0: result };
+        } else if (Array.isArray(current) && !Array.isArray(result)) {
+            // Convert object or scalar into object before merge
+            result = isPlainObject(result) ? { ...result } : { 0: result };
+        }
+
+        for (const [key, value] of Object.entries(current)) {
+            if (
+                key in result &&
+                (Array.isArray((result as any)[key]) || isPlainObject((result as any)[key])) &&
+                (Array.isArray(value) || isPlainObject(value))
+            ) {
+                (result as any)[key] = array_replace_recursive((result as any)[key], value);
+            } else {
+                (result as any)[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://php.net/manual/en/function.array-reverse.php
  */
 export function array_reverse(
@@ -399,6 +890,31 @@ export function array_reverse(
         });
 
     return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-search.php
+ */
+export function array_search(
+    needle: any,
+    haystack: any[] | Record<string, any>,
+    strict: boolean = false,
+): number | string | false {
+    if (Array.isArray(haystack)) {
+        for (let i = 0; i < haystack.length; i++) {
+            if (strict ? haystack[i] === needle : haystack[i] == needle) {
+                return i;
+            }
+        }
+    } else if (typeof haystack === 'object' && haystack !== null) {
+        for (const [key, value] of Object.entries(haystack)) {
+            if (strict ? value === needle : value == needle) {
+                return key;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -472,6 +988,161 @@ export function array_slice(
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.array-splice.php
+ */
+export function array_splice(
+    array: any[] | Record<string, any>,
+    offset: number,
+    length?: number,
+    replacement: any[] = [],
+): any[] {
+    let isArray = Array.isArray(array);
+
+    // Convert object to array of values.
+    let values = isArray ? (array as any[]) : Object.values(array);
+
+    const arrLength = values.length;
+
+    // Handle negative offsets.
+    if (offset < 0) {
+        offset = arrLength + offset;
+        if (offset < 0) offset = 0;
+    }
+
+    // Default length: remove until end.
+    if (length === undefined) {
+        length = arrLength - offset;
+    } else if (length < 0) {
+        length = Math.max(0, arrLength - offset + length);
+    }
+
+    // Extract removed portion.
+    const removed = values.slice(offset, offset + length);
+
+    // Perform splice.
+    values.splice(offset, length, ...replacement);
+
+    // Mutate the original input.
+    if (!isArray) {
+        // Clear and repopulate object with reindexed keys.
+        const obj = array as Record<string, any>;
+        for (const key in obj) delete obj[key];
+        values.forEach((value, i) => (obj[i] = value));
+    }
+
+    return removed;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-udiff.php
+ */
+export function array_udiff(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
+): any[] | Record<string, any> {
+    const compareFn = args.pop() as (a: any, b: any) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const arr of arrays) {
+            for (const otherValue of Object.values(arr)) {
+                if (compareFn(value, otherValue) === 0) {
+                    continue outer;
+                }
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-uintersect.php
+ */
+export function array_uintersect(
+    array: any[] | Record<string, any>,
+    ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
+): any[] | Record<string, any> {
+    const valueCompareFunc = args.pop() as (a: any, b: any) => number;
+    const arrays = args as (any[] | Record<string, any>)[];
+    const isArray = Array.isArray(array);
+    const result: any[] | Record<string, any> = isArray ? [] : {};
+
+    outer: for (const [key, value] of Object.entries(array)) {
+        for (const other of arrays) {
+            let matched = false;
+
+            for (const otherValue of Object.values(other)) {
+                if (valueCompareFunc(value, otherValue) === 0) {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                continue outer;
+            }
+        }
+
+        if (isArray) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.array-unique.php
+ */
+export function array_unique(
+    array: any[] | Record<string, any>,
+    sortFlags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_STRING,
+): any[] | Record<string, any> {
+    const seen = new Set<string>();
+    const result: any = Array.isArray(array) ? [] : {};
+
+    const normalize = (value: any): any => {
+        switch (sortFlags) {
+            case SORT_NUMERIC:
+                return String(Number(value));
+            case SORT_STRING:
+                return String(value);
+            case SORT_REGULAR:
+            default:
+                // JSON.stringify provides stable comparison for arrays/objects.
+                return typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value);
+        }
+    };
+
+    for (const [key, value] of Object.entries(array)) {
+        const normalized = normalize(value);
+
+        if (!seen.has(normalized)) {
+            seen.add(normalized);
+
+            if (Array.isArray(array)) {
+                result.push(value);
+            } else {
+                result[key] = value;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.array-unshift.php
  */
 export function array_unshift(array: any[] | Record<string, any>, ...values: any[]): number {
@@ -493,6 +1164,138 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
     }
 
     return Object.values(array).length;
+}
+
+/**
+ * @link https://php.net/manual/en/function.arsort.php
+ */
+export function arsort(
+    array: any[] | Record<string, any>,
+    flags:
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+        | number = SORT_REGULAR,
+): true {
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
+
+    const sortedEntries = Object.entries(array).sort(([, a], [, b]) => {
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(b) - Number(a);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(b).toLocaleLowerCase().localeCompare(String(a).toLocaleLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase(), undefined, { numeric: true })
+                    : String(b).localeCompare(String(a), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return b - a;
+                }
+
+                if (a === b) {
+                    return 0;
+                }
+
+                return a > b ? -1 : 1;
+        }
+    });
+
+    if (Array.isArray(array)) {
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+    } else {
+        for (const key of Object.keys(array)) {
+            delete (array as Record<string, any>)[key];
+        }
+
+        for (const [key, value] of sortedEntries) {
+            (array as Record<string, any>)[key] = value;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @link https://php.net/manual/en/function.asort.php
+ */
+export function asort(
+    array: any[] | Record<string, any>,
+    flags:
+        | typeof SORT_REGULAR
+        | typeof SORT_NUMERIC
+        | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
+        | typeof SORT_NATURAL
+        | typeof SORT_FLAG_CASE
+        | number = SORT_REGULAR,
+): true {
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
+
+    const sortedEntries = Object.entries(array).sort(([, a]: [string, any], [, b]: [string, any]): number => {
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(a) - Number(b);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(a).toLocaleLowerCase().localeCompare(String(b).toLocaleLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase(), undefined, { numeric: true })
+                    : String(a).localeCompare(String(b), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
+
+                if (a === b) {
+                    return 0;
+                }
+
+                return b > a ? -1 : 1;
+        }
+    });
+
+    if (Array.isArray(array)) {
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+    } else {
+        for (const key of Object.keys(array)) {
+            delete (array as Record<string, any>)[key];
+        }
+
+        for (const [key, value] of sortedEntries) {
+            (array as Record<string, any>)[key] = value;
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -573,9 +1376,6 @@ export function basename(path: string, suffix: string = ''): string {
 
     return base;
 }
-
-export const COUNT_NORMAL = 0;
-export const COUNT_RECURSIVE = 1;
 
 /**
  * @link https://php.net/manual/en/function.count.php
@@ -719,17 +1519,6 @@ export function explode(separator: string, string: string, limit: number = Numbe
     return parts.slice(0, limit);
 }
 
-export const FILTER_VALIDATE_INT = 257;
-export const FILTER_VALIDATE_BOOLEAN = 258;
-export const FILTER_VALIDATE_FLOAT = 259;
-export const FILTER_VALIDATE_URL = 273;
-export const FILTER_VALIDATE_EMAIL = 274;
-export const FILTER_SANITIZE_STRING = 513;
-export const FILTER_DEFAULT = 516;
-export const FILTER_UNSAFE_RAW = 516;
-export const FILTER_SANITIZE_EMAIL = 517;
-export const FILTER_SANITIZE_URL = 518;
-
 /**
  * @link https://php.net/manual/en/function.filter-var.php
  */
@@ -863,9 +1652,6 @@ export async function hash(
     return digest.toString('hex');
 }
 
-export const PHP_QUERY_RFC1738 = 1;
-export const PHP_QUERY_RFC3986 = 2;
-
 /**
  * @link https://www.php.net/manual/en/function.http-build-query.php
  */
@@ -928,12 +1714,16 @@ export function http_build_query(
  * @link https://php.net/manual/en/function.in-array.php
  */
 export function in_array(needle: any, haystack: any[] | Record<string, any>, strict: boolean = false): boolean {
-    for (const value of Object.values(haystack)) {
+    for (let value of Object.values(haystack)) {
         if (strict) {
             if (needle === value) {
                 return true;
             }
         } else {
+            // Convert arrays and objects to strings in order to compare structure since JS compares objects based on reference.
+            needle = typeof needle === 'object' && needle !== null ? JSON.stringify(needle) : needle;
+            value = typeof value === 'object' && value !== null ? JSON.stringify(value) : value;
+
             if (needle == value) {
                 return true;
             }
@@ -941,6 +1731,34 @@ export function in_array(needle: any, haystack: any[] | Record<string, any>, str
     }
 
     return false;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.intval.php
+ */
+export function intval(value: any, base: number = 10): number {
+    if (typeof value === 'boolean') {
+        return value ? 1 : 0;
+    }
+
+    if (typeof value === 'number') {
+        return Math.trunc(value);
+    }
+
+    if (typeof value === 'string') {
+        // Trim and handle base detection like PHP.
+        const trimmed = value.trim();
+
+        if (trimmed === '') {
+            return 0;
+        }
+
+        const parsed = parseInt(trimmed, base);
+
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    return 0;
 }
 
 /**
@@ -955,12 +1773,6 @@ export function isset(...vars: any[]): boolean {
 
     return true;
 }
-
-export const SORT_REGULAR = 0;
-export const SORT_NUMERIC = 1;
-export const SORT_STRING = 2;
-export const SORT_NATURAL = 6;
-export const SORT_FLAG_CASE = 8;
 
 /**
  * @link https://www.php.net/manual/en/function.krsort.php
@@ -1004,7 +1816,7 @@ export function ksort(
     const sortedEntries = Object.entries(array).sort(([a], [b]) => compareKeys(a, b, flags));
 
     if (Array.isArray(array)) {
-        // Clear and reassign values in place
+        // Clear and reassign values in place.
         array.length = 0;
 
         for (const [, value] of sortedEntries) {
@@ -1014,7 +1826,7 @@ export function ksort(
         return true;
     }
 
-    // Delete all keys, then reassign in sorted order
+    // Delete all keys, then reassign in sorted order.
     for (const key of Object.keys(array)) {
         delete array[key];
     }
@@ -1024,29 +1836,6 @@ export function ksort(
     }
 
     return true;
-}
-
-/**
- * Compare two keys according to PHP's sort flag logic.
- */
-function compareKeys(
-    a: string,
-    b: string,
-    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING,
-): number {
-    switch (flags) {
-        case SORT_NUMERIC:
-            return Number(a) - Number(b);
-        case SORT_STRING:
-            return a.localeCompare(b);
-        default:
-            // PHP's default comparison: numeric if both numeric strings, else string
-            const aNum = parseFloat(a);
-            const bNum = parseFloat(b);
-            const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
-
-            return bothNumeric ? aNum - bNum : a.localeCompare(b);
-    }
 }
 
 /**
@@ -1092,10 +1881,6 @@ export function max(...values: any[]): any {
     // Use PHP-style loose comparison rules.
     return values.reduce((maxValue, current) => (current > maxValue ? current : maxValue));
 }
-
-export const MB_CASE_UPPER = 0;
-export const MB_CASE_LOWER = 1;
-export const MB_CASE_TITLE = 2;
 
 /**
  * @link https://php.net/manual/en/function.mb-convert-case.php
@@ -1313,10 +2098,6 @@ export function mb_strlen(string: string): number {
     return count;
 }
 
-export const STR_PAD_LEFT = 0;
-export const STR_PAD_RIGHT = 1;
-export const STR_PAD_BOTH = 2;
-
 /**
  * @link https://php.net/manual/en/function.mb-strpos.php
  */
@@ -1512,9 +2293,6 @@ export function preg_match(pattern: string, subject: string, matches?: string[])
         return false;
     }
 }
-
-export const PREG_SET_ORDER = 2;
-export const PREG_OFFSET_CAPTURE = 4;
 
 /**
  * @link https://php.net/manual/en/function.preg-match-all.php
@@ -1806,10 +2584,6 @@ export function preg_replace_callback(
     return result;
 }
 
-export const PREG_SPLIT_NO_EMPTY = 1;
-export const PREG_SPLIT_DELIM_CAPTURE = 2;
-export const PREG_SPLIT_OFFSET_CAPTURE = 4;
-
 /**
  * @link https://php.net/manual/en/function.preg-split.php
  */
@@ -1994,43 +2768,112 @@ export function random_int(min: number, max: number): number {
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.range.php
+ */
+export function range(start: number | string, end: number | string, step: number = 1): (number | string)[] {
+    if (step === 0) {
+        throw new Error('range(): Step cannot be 0');
+    }
+
+    const result: (number | string)[] = [];
+
+    // Handle numeric range.
+    if (typeof start === 'number' && typeof end === 'number') {
+        if (start < end && step < 0) {
+            throw new Error('range(): Step must be greater than 0 for increasing ranges');
+        }
+
+        if (start <= end) {
+            for (let i = start; i <= end; i += step) {
+                result.push(i);
+            }
+        } else {
+            step = step < 0 ? -step : step;
+
+            for (let i = start; i >= end; i -= step) {
+                result.push(i);
+            }
+        }
+
+        return result;
+    }
+
+    // Handle alphabetic range.
+    if (typeof start === 'string' && typeof end === 'string') {
+        // PHP supports single-character ranges only.
+        if (start.length !== 1 || end.length !== 1) {
+            console.warn('Start and end must be a single byte, subsequent bytes are ignored');
+        }
+
+        const startCode = start.charCodeAt(0);
+        const endCode = end.charCodeAt(0);
+
+        if (startCode < endCode && step < 0) {
+            throw new Error('range(): Step must be greater than 0 for increasing ranges');
+        }
+
+        if (startCode <= endCode) {
+            for (let i = startCode; i <= endCode; i += step) {
+                result.push(String.fromCharCode(i));
+            }
+        } else {
+            step = step < 0 ? -step : step;
+
+            for (let i = startCode; i >= endCode; i -= step) {
+                result.push(String.fromCharCode(i));
+            }
+        }
+
+        return result;
+    }
+
+    throw new TypeError('range(): Both start and end parameters must be of the same type');
+}
+
+/**
  * @link https://www.php.net/manual/en/function.rsort.php
  */
 export function rsort(
     array: any[] | Record<string, any>,
-    flags: (
+    flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
         | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
         | typeof SORT_NATURAL
         | typeof SORT_FLAG_CASE
-    )[] = [SORT_STRING],
+        | number = SORT_REGULAR,
 ): true {
-    const flagCase = in_array(SORT_FLAG_CASE, flags);
-    const numeric = in_array(SORT_NUMERIC, flags);
-    const string = in_array(SORT_STRING, flags);
-    const natural = in_array(SORT_NATURAL, flags);
-
-    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
     const sort = (a: any, b: any) => {
-        if (a == null) {
-            a = '';
-        }
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(b) - Number(a);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(b).toLocaleLowerCase().localeCompare(String(a).toLocaleLowerCase())
+                    : String(b).localeCompare(String(a));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(b).toLowerCase().localeCompare(String(a).toLowerCase(), undefined, { numeric: true })
+                    : String(b).localeCompare(String(a), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return b - a;
+                }
 
-        if (b == null) {
-            b = '';
-        }
+                if (a === b) {
+                    return 0;
+                }
 
-        let cmp: number;
-        if (numeric) {
-            cmp = parseFloat(a) - parseFloat(b);
-        } else if (string || natural) {
-            cmp = collator.compare(String(a), String(b));
-        } else {
-            cmp = a == b ? 0 : a > b ? 1 : -1;
+                return a > b ? -1 : 1;
         }
-
-        return -cmp; // Reverse order for rsort
     };
 
     if (Array.isArray(array)) {
@@ -2038,7 +2881,7 @@ export function rsort(
     } else {
         const sorted = Object.values(array).sort(sort);
 
-        // Reindex keys numerically
+        // Reindex keys numerically.
         for (let i = 0; i < sorted.length; i++) {
             array[i] = sorted[i];
         }
@@ -2069,50 +2912,45 @@ export function rtrim(string: string, characters?: string): string {
  */
 export function sort(
     array: any[] | Record<string, any>,
-    flags: (
+    flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
         | typeof SORT_STRING
+        | typeof SORT_LOCALE_STRING
         | typeof SORT_NATURAL
         | typeof SORT_FLAG_CASE
-    )[] = [SORT_REGULAR],
+        | number = SORT_REGULAR,
 ): true {
-    const flagCase = in_array(SORT_FLAG_CASE, flags);
-    const numeric = in_array(SORT_NUMERIC, flags);
-    const string = in_array(SORT_STRING, flags);
-    const natural = in_array(SORT_NATURAL, flags);
-
-    const collator = new Intl.Collator(undefined, { numeric: natural, sensitivity: flagCase ? 'base' : 'variant' });
+    const ignoreCase = !!(flags & SORT_FLAG_CASE);
+    const baseFlag = flags & ~SORT_FLAG_CASE;
     const sort = (a: any, b: any) => {
-        // Handle undefined/null same as PHP (treat as empty string).
-        if (a == null) {
-            a = '';
+        switch (baseFlag) {
+            case SORT_NUMERIC:
+                return Number(a) - Number(b);
+            case SORT_STRING:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_LOCALE_STRING:
+                return ignoreCase
+                    ? String(a).toLocaleLowerCase().localeCompare(String(b).toLocaleLowerCase())
+                    : String(a).localeCompare(String(b));
+            case SORT_NATURAL:
+                return ignoreCase
+                    ? String(a).toLowerCase().localeCompare(String(b).toLowerCase(), undefined, { numeric: true })
+                    : String(a).localeCompare(String(b), undefined, { numeric: true });
+            case SORT_REGULAR:
+            default:
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
+
+                if (a === b) {
+                    return 0;
+                }
+
+                return b > a ? -1 : 1;
         }
-
-        if (b == null) {
-            b = '';
-        }
-
-        if (numeric) {
-            const na = parseFloat(a);
-            const nb = parseFloat(b);
-
-            return na - nb;
-        }
-
-        if (string || natural) {
-            const sa = String(a);
-            const sb = String(b);
-
-            return collator.compare(sa, sb);
-        }
-
-        // Default PHP regular comparison.
-        if (a == b) {
-            return 0;
-        }
-
-        return a > b ? 1 : -1;
     };
 
     if (Array.isArray(array)) {
@@ -2359,6 +3197,27 @@ export function str_word_count(
 }
 
 /**
+ * @link https://php.net/manual/en/function.strcasecmp.php
+ */
+export function strcasecmp(string1: string, string2: string): number {
+    return string1.localeCompare(string2, undefined, { sensitivity: 'accent' });
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strcmp.php
+ */
+export function strcmp(string1: string, string2: string): number {
+    return string1 === string2 ? 0 : string1 > string2 ? 1 : -1;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strcoll.php
+ */
+export function strcoll(string1: string, string2: string): number {
+    return string1.localeCompare(string2);
+}
+
+/**
  * @link https://php.net/manual/en/function.strip-tags.php
  */
 export function strip_tags(string: string, allowedTags: string | string[] = ''): string {
@@ -2397,6 +3256,22 @@ export function strip_tags(string: string, allowedTags: string | string[] = ''):
  */
 export function strlen(string: string): number {
     return new TextEncoder().encode(string).length;
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strnatcasecmp.php
+ */
+export function strnatcasecmp(string1: string, string2: string): number {
+    // Use localeCompare with numeric sorting enabled (natural order).
+    return string1.toLowerCase().localeCompare(string2.toLowerCase(), undefined, { numeric: true });
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.strnatcmp.php
+ */
+export function strnatcmp(string1: string, string2: string): number {
+    // Use localeCompare with numeric sorting enabled (natural order).
+    return string1.localeCompare(string2, undefined, { numeric: true });
 }
 
 /**
@@ -2695,6 +3570,28 @@ export function trim(string: string, characters: string = ' \n\r\t\v\0'): string
 }
 
 /**
+ * @link https://php.net/manual/en/function.uasort.php
+ */
+export function uasort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
+    const sortedEntries = Object.entries(array).sort(([_aKey, aVal], [_bKey, bVal]) => callback(aVal, bVal));
+    const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+
+    for (const [key, value] of sortedEntries) {
+        if (Array.isArray(result)) {
+            result.push(value);
+        } else {
+            (result as Record<string, any>)[key] = value;
+        }
+    }
+
+    // Mutate the original array (PHP-style).
+    Object.keys(array).forEach((k) => delete (array as any)[k]);
+    Object.assign(array, result);
+
+    return true;
+}
+
+/**
  * @link https://php.net/manual/en/function.ucwords.php
  */
 export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): string {
@@ -2714,17 +3611,41 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
 }
 
 /**
+ * @link https://www.php.net/manual/en/function.uksort.php
+ */
+export function uksort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
+    const sortedEntries = Object.entries(array).sort(([a], [b]) => callback(a, b));
+
+    if (Array.isArray(array)) {
+        // Clear and reassign values in place.
+        array.length = 0;
+
+        for (const [, value] of sortedEntries) {
+            array.push(value);
+        }
+
+        return true;
+    }
+
+    // Delete all keys, then reassign in sorted order.
+    for (const key of Object.keys(array)) {
+        delete array[key];
+    }
+
+    for (const [key, value] of sortedEntries) {
+        array[key] = value;
+    }
+
+    return true;
+}
+
+/**
  * @link https://www.php.net/manual/en/function.unset.php
  *
  * Variables cannot be unset in JS, so we will only accept an array / object and key.
  */
 export function unset(array: any[] | Record<string, any>, key: number | string): void {
-    // Remove the key/property if it exists (silent if not)
-    if (Array.isArray(array)) {
-        array.splice(Number(key), 1);
-    } else {
-        delete array[key];
-    }
+    delete (array as any)[key];
 }
 
 /**
@@ -2795,6 +3716,29 @@ export function wordwrap(
 }
 
 /**
+ * Compare two keys according to PHP's sort flag logic.
+ */
+function compareKeys(
+    a: string,
+    b: string,
+    flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING,
+): number {
+    switch (flags) {
+        case SORT_NUMERIC:
+            return Number(a) - Number(b);
+        case SORT_STRING:
+            return a.localeCompare(b);
+        default:
+            // PHP's default comparison: numeric if both numeric strings, else string
+            const aNum = parseFloat(a);
+            const bNum = parseFloat(b);
+            const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+            return bothNumeric ? aNum - bNum : a.localeCompare(b);
+    }
+}
+
+/**
  * Escape characters that are special inside a character class or regex literal.
  */
 function escapeForRegex(str: string): string {
@@ -2812,6 +3756,13 @@ function fromBinaryString(binary: string): string {
     }
 
     return result;
+}
+
+/**
+ * Helper to detect plain objects
+ */
+function isPlainObject(value: any): boolean {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
