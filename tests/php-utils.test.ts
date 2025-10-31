@@ -702,6 +702,22 @@ test('hash', async () => {
     );
 });
 
+test('htmlspecialchars', () => {
+    expect(php.htmlspecialchars('<a href="test">Test</a>')).toEqual('&lt;a href=&quot;test&quot;&gt;Test&lt;/a&gt;');
+    expect(php.htmlspecialchars('<a href="test">Test</a>', php.ENT_COMPAT)).toEqual(
+        '&lt;a href=&quot;test&quot;&gt;Test&lt;/a&gt;',
+    );
+    expect(php.htmlspecialchars('<a href="test">Test</a>', php.ENT_NOQUOTES)).toEqual(
+        '&lt;a href="test"&gt;Test&lt;/a&gt;',
+    );
+    expect(php.htmlspecialchars('&lt;a href=&quote;test&quote;&gt;Test&lt;/a&gt;')).toEqual(
+        '&amp;lt;a href=&amp;quote;test&amp;quote;&amp;gt;Test&amp;lt;/a&amp;gt;',
+    );
+    expect(php.htmlspecialchars('&lt;a href=&quote;test&quote;&gt;Test&lt;/a&gt;', php.ENT_QUOTES, false)).toEqual(
+        '&lt;a href=&quote;test&quote;&gt;Test&lt;/a&gt;',
+    );
+});
+
 test('http_build_query', () => {
     expect(php.http_build_query(['foo', 'bar', 'baz', null, 'boom', 'milk', 'hypertext processor'])).toBe(
         '0=foo&1=bar&2=baz&4=boom&5=milk&6=hypertext+processor',

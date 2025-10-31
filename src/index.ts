@@ -2,6 +2,9 @@ export const ARRAY_FILTER_USE_KEY = 1;
 export const ARRAY_FILTER_USE_BOTH = 2;
 export const COUNT_NORMAL = 0;
 export const COUNT_RECURSIVE = 1;
+export const ENT_NOQUOTES = 0;
+export const ENT_COMPAT = 2;
+export const ENT_QUOTES = 3;
 export const FILTER_VALIDATE_INT = 257;
 export const FILTER_VALIDATE_BOOLEAN = 258;
 export const FILTER_VALIDATE_FLOAT = 259;
@@ -1650,6 +1653,48 @@ export async function hash(
     }
 
     return digest.toString('hex');
+}
+
+/**
+ * @link https://www.php.net/manual/en/function.htmlspecialchars.php
+ */
+export function htmlspecialchars(
+    string: string,
+    flags: typeof ENT_NOQUOTES | typeof ENT_COMPAT | typeof ENT_QUOTES | number = ENT_QUOTES,
+    doubleEncode: boolean = true,
+): string {
+    const map: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+    };
+
+    const noQuotes = flags === ENT_NOQUOTES;
+    const shouldEncodeQuotes = !noQuotes && (flags & ENT_QUOTES) === ENT_QUOTES;
+    const shouldEncodeDouble = !noQuotes && ((flags & ENT_COMPAT) === ENT_COMPAT || shouldEncodeQuotes);
+
+    if (shouldEncodeDouble) {
+        map['"'] = '&quot;';
+    }
+
+    if (shouldEncodeQuotes) {
+        map["'"] = '&#039;';
+    }
+
+    // If doubleEncode is false, temporarily replace existing entities.
+    if (!doubleEncode) {
+        string = string.replace(/&(#?\w+);/g, '__ENTITY__$1;');
+    }
+
+    // Perform replacement.
+    string = string.replace(/[&<>"']/g, (char) => map[char] ?? char);
+
+    // Restore entities if doubleEncode is false.
+    if (!doubleEncode) {
+        string = string.replace(/__ENTITY__(#?\w+);/g, '&$1;');
+    }
+
+    return string;
 }
 
 /**
