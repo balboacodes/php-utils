@@ -4,11 +4,13 @@
 
 ## About PHP Utils
 
-PHP Utils is a fully-typed collection of native PHP functions ported to TypeScript. It was originally developed as part of [Stringable](https://github.com/balboacodes/stringable), but is now a standalone package. Some functions do not include all the functionality of their native versions, so if you see something missing or would like another function added, please submit a [pull request](https://github.com/balboacodes/php-utils/pulls)! The full list of functions is too many to list here, but you can check out the [src](https://github.com/balboacodes/php-utils/blob/main/src/index.ts) file and do a simple search to see what's available.
+PHP Utils is a collection of native PHP functions ported to TypeScript. It was originally developed as part of the [Laravel Helpers](https://github.com/balboacodes/laravel-helpers) package, but is now a standalone package. Some functions do not include all the functionality of their native versions, so if you see something missing or would like another function added, please submit a [pull request](https://github.com/balboacodes/php-utils/pulls)! The full list of functions is too many to list here, but you can check out the [src](https://github.com/balboacodes/php-utils/blob/main/src/index.ts) file and do a simple search to see what's available.
 
 ## Installation
 
-`npm i @balboacodes/php-utils`
+```
+npm i @balboacodes/php-utils
+```
 
 ## Usage
 
