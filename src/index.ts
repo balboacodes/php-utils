@@ -2774,39 +2774,32 @@ export function random_int(min: number, max: number): number {
         throw new RangeError('random_int(): min must be less than or equal to max');
     }
 
-    const range = max - min;
-
-    if (range === 0) {
+    if (min === max) {
         return min;
     }
 
-    let randUint32: () => number;
+    const range = max - min;
+    const maxSafe = Number.MAX_SAFE_INTEGER;
 
-    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-        randUint32 = () => {
-            const array = new Uint32Array(1);
-            crypto.getRandomValues(array);
+    // Generate a random 53-bit integer using two 32-bit parts.
+    const random53 = (): number => {
+        const buf = new Uint32Array(2);
+        crypto.getRandomValues(buf);
 
-            return array[0];
-        };
-    } else {
-        // Node.js fallback.
-        const { randomBytes } = require('crypto');
+        // Construct 53-bit integer: upper 21 bits of buf[0] + all 32 bits of buf[1].
+        return (buf[0] & 0x001fffff) * 0x100000000 + buf[1];
+    };
 
-        randUint32 = () => {
-            const array = new Uint32Array(1);
-            randomBytes(array);
-
-            return array[0];
-        };
+    // When full 53-bit range requested, no need for rejection.
+    if (range >= maxSafe) {
+        return random53();
     }
 
-    const maxUint32 = 0xffffffff;
-    const limit = maxUint32 - (maxUint32 % (range + 1));
+    const limit = maxSafe - (maxSafe % (range + 1));
     let rand: number;
 
     do {
-        rand = randUint32();
+        rand = random53();
     } while (rand >= limit);
 
     return min + (rand % (range + 1));

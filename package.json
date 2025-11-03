@@ -1,6 +1,6 @@
 {
     "name": "@balboacodes/php-utils",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "A collection of native PHP functions ported to TypeScript",
     "keywords": [
         "php",

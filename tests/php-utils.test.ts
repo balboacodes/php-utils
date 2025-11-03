@@ -1023,6 +1023,8 @@ test('random_bytes', () => {
 
 test('random_int', () => {
     expect(php.random_int(100, 999)).toBeTypeOf('number');
+    expect(php.random_int(0, Number.MAX_SAFE_INTEGER)).toBeTypeOf('number');
+    expect(php.random_int(0, Number.MAX_SAFE_INTEGER - 1)).toBeTypeOf('number');
 });
 
 test('range', () => {
