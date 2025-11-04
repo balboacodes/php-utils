@@ -38,12 +38,12 @@ export const STR_PAD_BOTH = 2;
 /**
  * @link https://www.php.net/manual/en/function.array-all.php
  */
-export function array_all(
-    array: any[] | Record<string, any>,
-    callback: (value: any, key: string | number) => boolean,
+export function array_all<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback: (value: TValue, key: TKey) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
-        if (!callback(value, Array.isArray(array) ? Number(key) : key)) {
+        if (!callback(value, (Array.isArray(array) ? Number(key) : key) as TKey)) {
             return false;
         }
     }
@@ -54,12 +54,12 @@ export function array_all(
 /**
  * @link https://www.php.net/manual/en/function.array-any.php
  */
-export function array_any(
-    array: any[] | Record<string, any>,
-    callback: (value: any, key: string | number) => boolean,
+export function array_any<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback: (value: TValue, key: TKey) => boolean,
 ): boolean {
     for (const [key, value] of Object.entries(array)) {
-        if (callback(value, key)) {
+        if (callback(value, key as TKey)) {
             return true;
         }
     }
@@ -70,31 +70,31 @@ export function array_any(
 /**
  * @link https://www.php.net/manual/en/function.array-chunk.php
  */
-export function array_chunk(
-    array: any[] | Record<string, any>,
+export function array_chunk<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     length: number,
     preserveKeys = false,
-): (any[] | Record<string, any>)[] {
+): (TValue[] | Record<TKey, TValue>)[] {
     if (length < 1) {
         throw new RangeError('array_chunk(): Length parameter must be greater than 0');
     }
 
-    const chunks: (any[] | Record<string, any>)[] = [];
-    let currentChunk: any = preserveKeys ? {} : [];
+    const chunks: (TValue[] | Record<TKey, TValue>)[] = [];
+    let currentChunk = preserveKeys ? ({} as Record<TKey, TValue>) : ([] as TValue[]);
     let count = 0;
 
     for (const [key, value] of Object.entries(array)) {
         if (preserveKeys) {
-            (currentChunk as Record<string, any>)[key] = value;
+            (currentChunk as Record<TKey, TValue>)[key as TKey] = value;
         } else {
-            (currentChunk as any[]).push(value);
+            (currentChunk as TValue[]).push(value);
         }
 
         count++;
 
         if (count % length === 0) {
             chunks.push(currentChunk);
-            currentChunk = preserveKeys ? {} : [];
+            currentChunk = preserveKeys ? ({} as Record<TKey, TValue>) : ([] as TValue[]);
         }
     }
 
@@ -108,12 +108,12 @@ export function array_chunk(
 
 /**
  * @link https://www.php.net/manual/en/function.array-combine.php
- * @throws If both parameters don't have equal number of elements.
+ * @throws {TypeError} If both parameters don't have equal number of elements.
  */
-export function array_combine(
-    keys: (number | string)[] | Record<string, number | string>,
-    values: any[] | Record<string, any>,
-): Record<string, any> {
+export function array_combine<TKey extends number | string, TValue>(
+    keys: TKey[] | Record<string, TKey>,
+    values: TValue[] | Record<string, TValue>,
+): Record<TKey, TValue> {
     keys = Object.values(keys);
     values = Object.values(values);
 
@@ -123,10 +123,10 @@ export function array_combine(
         );
     }
 
-    const result: Record<string, any> = {};
+    const result = {} as Record<TKey, TValue>;
 
     for (let i = 0; i < keys.length; i++) {
-        result[keys[i]] = (values as any)[i];
+        result[keys[i]] = (values as TValue[])[i];
     }
 
     return result;
@@ -135,12 +135,12 @@ export function array_combine(
 /**
  * @link https://www.php.net/manual/en/function.array-diff.php
  */
-export function array_diff(
-    array: any[] | Record<string, any>,
+export function array_diff<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     // Flatten all comparison arrays into one set of values (non-strict).
     const compareValues: any[] = [];
@@ -156,9 +156,9 @@ export function array_diff(
 
         if (!exists) {
             if (isArray) {
-                result.push(value);
+                (result as TValue[]).push(value);
             } else {
-                (result as Record<string, any>)[key] = value;
+                (result as Record<TKey, TValue>)[key as TKey] = value;
             }
         }
     }
@@ -169,12 +169,12 @@ export function array_diff(
 /**
  * @link https://www.php.net/manual/en/function.array-diff-assoc.php
  */
-export function array_diff_assoc(
-    array: any[] | Record<string, any>,
+export function array_diff_assoc<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     for (const [key, value] of Object.entries(array)) {
         let found = false;
@@ -193,9 +193,9 @@ export function array_diff_assoc(
 
         if (!found) {
             if (isArray) {
-                result.push(value);
+                (result as TValue[]).push(value);
             } else {
-                (result as Record<string, any>)[key] = value;
+                (result as Record<TKey, TValue>)[key as TKey] = value;
             }
         }
     }
@@ -206,12 +206,12 @@ export function array_diff_assoc(
 /**
  * @link https://www.php.net/manual/en/function.array-diff-key.php
  */
-export function array_diff_key(
-    array: any[] | Record<string, any>,
+export function array_diff_key<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     for (const [key, value] of Object.entries(array)) {
         let found = false;
@@ -225,9 +225,9 @@ export function array_diff_key(
 
         if (!found) {
             if (isArray) {
-                result.push(value);
+                (result as TValue[]).push(value);
             } else {
-                (result as Record<string, any>)[key] = value;
+                (result as Record<TKey, TValue>)[key as TKey] = value;
             }
         }
     }
@@ -238,14 +238,14 @@ export function array_diff_key(
 /**
  * @link https://www.php.net/manual/en/function.array-diff-uassoc.php
  */
-export function array_diff_uassoc(
-    array: any[] | Record<string, any>,
+export function array_diff_uassoc<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const keyCompare = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
@@ -257,9 +257,9 @@ export function array_diff_uassoc(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -269,14 +269,14 @@ export function array_diff_uassoc(
 /**
  * @link https://www.php.net/manual/en/function.array-diff-ukey.php
  */
-export function array_diff_ukey(
-    array: any[] | Record<string, any>,
+export function array_diff_ukey<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const compareFn = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const arr of arrays) {
@@ -288,9 +288,9 @@ export function array_diff_ukey(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -300,11 +300,11 @@ export function array_diff_ukey(
 /**
  * @link https://php.net/manual/en/function.array-filter.php
  */
-export function array_filter(
-    array: any[] | Record<string, any>,
-    callback?: (value: any, key?: string | number) => boolean,
+export function array_filter<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback?: (value: TValue, key?: TKey) => boolean,
     mode: typeof ARRAY_FILTER_USE_KEY | typeof ARRAY_FILTER_USE_BOTH | 0 = 0,
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     if (Array.isArray(array)) {
         return array.filter((value, index) => {
             if (!callback) {
@@ -313,16 +313,16 @@ export function array_filter(
 
             switch (mode) {
                 case ARRAY_FILTER_USE_KEY:
-                    return callback(index);
+                    return callback(index as TValue);
                 case ARRAY_FILTER_USE_BOTH:
-                    return callback(value, index);
+                    return callback(value, index as TKey);
                 default:
                     return callback(value);
             }
         });
     }
 
-    const obj: Record<string, any> = {};
+    const obj = {} as Record<TKey, TValue>;
 
     for (const property in array) {
         if (!Object.hasOwn(array, property)) {
@@ -332,7 +332,7 @@ export function array_filter(
         const value = array[property];
         const keep = callback
             ? mode === ARRAY_FILTER_USE_KEY
-                ? callback(property)
+                ? callback(property as TValue)
                 : mode === ARRAY_FILTER_USE_BOTH
                   ? callback(value, property)
                   : callback(value)
@@ -349,12 +349,12 @@ export function array_filter(
 /**
  * @link https://www.php.net/manual/en/function.array-find-key.php
  */
-export function array_find_key(
-    array: any[] | Record<string, any>,
-    callback: (value: any, key: string | number) => boolean,
+export function array_find_key<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback: (value: TValue, key: TKey) => boolean,
 ): number | string | null {
     for (const [key, value] of Object.entries(array)) {
-        if (callback(value, key)) {
+        if (callback(value, key as TKey)) {
             return Array.isArray(array) ? Number(key) : key;
         }
     }
@@ -366,15 +366,17 @@ export function array_find_key(
  * @link https://www.php.net/manual/en/function.array-flip.php
  * @throws If parameter contains values other than strings and numbers.
  */
-export function array_flip(array: any[] | Record<string, any>): Record<string, string | number> {
-    const result: Record<string, string | number> = {};
+export function array_flip<TKey extends number | string, TValue extends number | string>(
+    array: TValue[] | Record<TKey, TValue>,
+): Record<TValue, TKey> {
+    const result = {} as Record<TValue, TKey>;
 
     for (const [key, value] of Object.entries(array)) {
         if (typeof value !== 'string' && typeof value !== 'number') {
             throw new TypeError(`array_flip(): Can only flip STRING and INTEGER values, found ${typeof value}`);
         }
 
-        result[String(value)] = isNaN(Number(key)) ? key : Number(key);
+        (result as any)[value] = isNaN(Number(key)) ? key : Number(key);
     }
 
     return result;
@@ -383,12 +385,12 @@ export function array_flip(array: any[] | Record<string, any>): Record<string, s
 /**
  * @link https://www.php.net/manual/en/function.array-intersect.php
  */
-export function array_intersect(
-    array: any[] | Record<string, any>,
+export function array_intersect<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
@@ -402,9 +404,9 @@ export function array_intersect(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -414,12 +416,12 @@ export function array_intersect(
 /**
  * @link https://www.php.net/manual/en/function.array-intersect-assoc.php
  */
-export function array_intersect_assoc(
-    array: any[] | Record<string, any>,
+export function array_intersect_assoc<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
@@ -429,9 +431,9 @@ export function array_intersect_assoc(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -440,17 +442,17 @@ export function array_intersect_assoc(
 
 /**
  * @link https://www.php.net/manual/en/function.array-intersect-key.php
- * @throws If less than two parameters are given.
+ * @throws {TypeError} If less than two parameters are given.
  */
-export function array_intersect_key(
-    array: any[] | Record<string, any>,
+export function array_intersect_key<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...arrays: (any[] | Record<string, any>)[]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     if (arrays.length === 0) {
         throw new TypeError('array_intersect_key(): At least 2 arrays are required');
     }
 
-    const result: Record<string, any> = {};
+    const result = {} as Record<TKey, TValue>;
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const arr of arrays) {
@@ -459,7 +461,7 @@ export function array_intersect_key(
             }
         }
 
-        result[key] = value;
+        result[key as TKey] = value;
     }
 
     return Array.isArray(array) ? Object.values(result) : result;
@@ -468,14 +470,14 @@ export function array_intersect_key(
 /**
  * @link https://www.php.net/manual/en/function.array-intersect-uassoc.php
  */
-export function array_intersect_uassoc(
-    array: any[] | Record<string, any>,
+export function array_intersect_uassoc<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...args: [...(any[] | Record<string, any>)[], (a: string, b: string) => number]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const keyCompareFunc = args.pop() as (a: string, b: string) => number;
     const arrays = args as (any[] | Record<string, any>)[];
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
@@ -494,9 +496,9 @@ export function array_intersect_uassoc(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -506,7 +508,7 @@ export function array_intersect_uassoc(
 /**
  * @link https://www.php.net/manual/en/function.array-is-list.php
  */
-export function array_is_list(array: any[] | Record<string, any>): boolean {
+export function array_is_list<TKey extends number | string, TValue>(array: TValue[] | Record<TKey, TValue>): boolean {
     const keys = Object.keys(array);
 
     for (let i = 0; i < keys.length; i++) {
@@ -521,7 +523,9 @@ export function array_is_list(array: any[] | Record<string, any>): boolean {
 /**
  * @link https://www.php.net/manual/en/function.array-key-first.php
  */
-export function array_key_first(array: any[] | Record<string, any>): number | string | null {
+export function array_key_first<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+): number | string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -536,7 +540,9 @@ export function array_key_first(array: any[] | Record<string, any>): number | st
 /**
  * @link https://www.php.net/manual/en/function.array-key-last.php
  */
-export function array_key_last(array: any[] | Record<string, any>): number | string | null {
+export function array_key_last<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+): number | string | null {
     const keys = Object.keys(array);
 
     if (keys.length === 0) {
@@ -551,24 +557,24 @@ export function array_key_last(array: any[] | Record<string, any>): number | str
 /**
  * @link https://www.php.net/manual/en/function.array-keys.php
  */
-export function array_keys(
-    array: any[] | Record<string, any>,
+export function array_keys<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     searchValue?: any,
     strict: boolean = false,
-): (number | string)[] {
+): TKey[] {
     const entries = Object.entries(array);
 
     if (searchValue === undefined) {
-        return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k));
+        return entries.map(([k]) => (Array.isArray(array) ? Number(k) : k)) as TKey[];
     }
 
-    const result: (string | number)[] = [];
+    const result: TKey[] = [];
 
     for (const [key, value] of entries) {
         const match = strict ? value === searchValue : value == searchValue;
 
         if (match) {
-            result.push(Array.isArray(array) ? Number(key) : key);
+            result.push((Array.isArray(array) ? Number(key) : key) as TKey);
         }
     }
 
@@ -687,7 +693,11 @@ export function array_merge_recursive(...arrays: (any[] | Record<string, any>)[]
 /**
  * @link https://www.php.net/manual/en/function.array-pad.php
  */
-export function array_pad(array: any[] | Record<string, any>, length: number, value: any): any[] | Record<string, any> {
+export function array_pad<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    length: number,
+    value: any,
+): any[] | Record<string, any> {
     if (Math.abs(length) <= Object.values(array).length) {
         return array;
     }
@@ -732,7 +742,7 @@ export function array_pad(array: any[] | Record<string, any>, length: number, va
 /**
  * @link https://www.php.net/manual/en/function.array-pop.php
  */
-export function array_pop(array: any[] | Record<string, any>): any {
+export function array_pop<TKey extends number | string, TValue>(array: TValue[] | Record<TKey, TValue>): TValue | null {
     if (Array.isArray(array)) {
         return array.pop() ?? null;
     }
@@ -743,15 +753,18 @@ export function array_pop(array: any[] | Record<string, any>): any {
         return null;
     }
 
-    delete array[last[0]];
+    delete array[last[0] as TKey];
 
-    return last[1];
+    return last[1] as TValue;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-push.php
  */
-export function array_push(array: any[] | Record<string, any>, ...values: any[]): number {
+export function array_push<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    ...values: any[]
+): number {
     if (values.length === 0) {
         return Object.keys(array).length;
     }
@@ -770,7 +783,7 @@ export function array_push(array: any[] | Record<string, any>, ...values: any[])
             .pop() ?? 0;
 
     values.forEach((value) => {
-        array[lastNumericKey + 1] = value;
+        array[(lastNumericKey + 1) as TKey] = value;
         lastNumericKey++;
     });
 
@@ -780,8 +793,8 @@ export function array_push(array: any[] | Record<string, any>, ...values: any[])
 /**
  * @link https://php.net/manual/en/function.array-reduce.php
  */
-export function array_reduce(
-    array: any[] | Record<string, any>,
+export function array_reduce<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     callback: (carry: any, item: any) => any,
     initial?: any,
 ): any {
@@ -810,8 +823,8 @@ export function array_reduce(
 /**
  * @link https://www.php.net/manual/en/function.array-replace.php
  */
-export function array_replace(
-    array: any[] | Record<string, any>,
+export function array_replace<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...replacements: (any[] | Record<string, any>)[]
 ): any[] | Record<string, any> {
     const result: any = Array.isArray(array) ? [...array] : { ...array };
@@ -871,24 +884,24 @@ export function array_replace_recursive(...arrays: (any[] | Record<string, any>)
 /**
  * @link https://php.net/manual/en/function.array-reverse.php
  */
-export function array_reverse(
-    array: any[] | Record<string, any>,
+export function array_reverse<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     preserveKeys: boolean = false,
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     if (Array.isArray(array)) {
         return array.slice().reverse();
     }
 
-    const result: Record<string, any> = {};
+    const result = {} as Record<TKey, TValue>;
 
     Object.entries(array)
         .reverse()
         .forEach(([key, value], i) => {
             // String keys always preserved; numeric keys may be reindexed
             if (preserveKeys || isNaN(Number(key))) {
-                result[key] = value;
+                (result as any)[key] = value;
             } else {
-                result[i] = value;
+                (result as any)[i] = value;
             }
         });
 
@@ -898,21 +911,21 @@ export function array_reverse(
 /**
  * @link https://www.php.net/manual/en/function.array-search.php
  */
-export function array_search(
+export function array_search<TKey extends number | string, TValue>(
     needle: any,
-    haystack: any[] | Record<string, any>,
+    haystack: TValue[] | Record<TKey, TValue>,
     strict: boolean = false,
-): number | string | false {
+): TKey | false {
     if (Array.isArray(haystack)) {
         for (let i = 0; i < haystack.length; i++) {
             if (strict ? haystack[i] === needle : haystack[i] == needle) {
-                return i;
+                return i as TKey;
             }
         }
     } else if (typeof haystack === 'object' && haystack !== null) {
         for (const [key, value] of Object.entries(haystack)) {
             if (strict ? value === needle : value == needle) {
-                return key;
+                return key as TKey;
             }
         }
     }
@@ -923,7 +936,9 @@ export function array_search(
 /**
  * @link https://php.net/manual/en/function.array-shift.php
  */
-export function array_shift(array: any[] | Record<string, any>): any {
+export function array_shift<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+): TValue | null {
     if (Array.isArray(array)) {
         return array.shift() ?? null;
     }
@@ -934,20 +949,20 @@ export function array_shift(array: any[] | Record<string, any>): any {
         return null;
     }
 
-    delete array[first[0]];
+    delete array[first[0] as TKey];
 
-    return first[1];
+    return first[1] as TValue;
 }
 
 /**
  * @link https://www.php.net/manual/en/function.array-slice.php
  */
-export function array_slice(
-    array: any[] | Record<string, any>,
+export function array_slice<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     offset: number,
     length?: number,
     preserveKeys: boolean = false,
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const entries = Object.entries(array);
     const arrLength = entries.length;
 
@@ -975,15 +990,15 @@ export function array_slice(
         return sliced.map(([_, value]) => value);
     }
 
-    const result: Record<string | number, any> = {};
+    const result = {} as Record<TKey, TValue>;
     let numericIndex = 0;
 
     for (const [key, value] of sliced) {
         // String keys always preserved; numeric keys may be reindexed
         if (preserveKeys || isNaN(Number(key))) {
-            result[key] = value;
+            result[key as TKey] = value;
         } else {
-            result[numericIndex++] = value;
+            result[numericIndex++ as TKey] = value;
         }
     }
 
@@ -993,8 +1008,8 @@ export function array_slice(
 /**
  * @link https://www.php.net/manual/en/function.array-splice.php
  */
-export function array_splice(
-    array: any[] | Record<string, any>,
+export function array_splice<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     offset: number,
     length?: number,
     replacement: any[] = [],
@@ -1002,7 +1017,7 @@ export function array_splice(
     let isArray = Array.isArray(array);
 
     // Convert object to array of values.
-    let values = isArray ? (array as any[]) : Object.values(array);
+    let values = isArray ? (array as TValue[]) : Object.values(array);
 
     const arrLength = values.length;
 
@@ -1039,14 +1054,14 @@ export function array_splice(
 /**
  * @link https://www.php.net/manual/en/function.array-udiff.php
  */
-export function array_udiff(
-    array: any[] | Record<string, any>,
+export function array_udiff<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const compareFn = args.pop() as (a: any, b: any) => number;
     const arrays = args as (any[] | Record<string, any>)[];
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const arr of arrays) {
@@ -1058,9 +1073,9 @@ export function array_udiff(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -1070,14 +1085,14 @@ export function array_udiff(
 /**
  * @link https://www.php.net/manual/en/function.array-uintersect.php
  */
-export function array_uintersect(
-    array: any[] | Record<string, any>,
+export function array_uintersect<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     ...args: [...(any[] | Record<string, any>)[], (a: any, b: any) => number]
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const valueCompareFunc = args.pop() as (a: any, b: any) => number;
     const arrays = args as (any[] | Record<string, any>)[];
     const isArray = Array.isArray(array);
-    const result: any[] | Record<string, any> = isArray ? [] : {};
+    const result = isArray ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     outer: for (const [key, value] of Object.entries(array)) {
         for (const other of arrays) {
@@ -1096,9 +1111,9 @@ export function array_uintersect(
         }
 
         if (isArray) {
-            result.push(value);
+            (result as TValue[]).push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -1108,12 +1123,12 @@ export function array_uintersect(
 /**
  * @link https://www.php.net/manual/en/function.array-unique.php
  */
-export function array_unique(
-    array: any[] | Record<string, any>,
+export function array_unique<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     sortFlags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_STRING,
-): any[] | Record<string, any> {
+): TValue[] | Record<TKey, TValue> {
     const seen = new Set<string>();
-    const result: any = Array.isArray(array) ? [] : {};
+    const result = Array.isArray(array) ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     const normalize = (value: any): any => {
         switch (sortFlags) {
@@ -1135,9 +1150,9 @@ export function array_unique(
             seen.add(normalized);
 
             if (Array.isArray(array)) {
-                result.push(value);
+                (result as TValue[]).push(value);
             } else {
-                result[key] = value;
+                (result as Record<TKey, TValue>)[key as TKey] = value;
             }
         }
     }
@@ -1148,7 +1163,10 @@ export function array_unique(
 /**
  * @link https://www.php.net/manual/en/function.array-unshift.php
  */
-export function array_unshift(array: any[] | Record<string, any>, ...values: any[]): number {
+export function array_unshift<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    ...values: any[]
+): number {
     if (Array.isArray(array)) {
         return array.unshift(...values);
     }
@@ -1163,7 +1181,7 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
     }
 
     for (let i = 0; i < allValues.length; i++) {
-        array[i] = allValues[i];
+        array[i as TKey] = allValues[i];
     }
 
     return Object.values(array).length;
@@ -1172,8 +1190,8 @@ export function array_unshift(array: any[] | Record<string, any>, ...values: any
 /**
  * @link https://php.net/manual/en/function.arsort.php
  */
-export function arsort(
-    array: any[] | Record<string, any>,
+export function arsort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
@@ -1238,8 +1256,8 @@ export function arsort(
 /**
  * @link https://php.net/manual/en/function.asort.php
  */
-export function asort(
-    array: any[] | Record<string, any>,
+export function asort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
@@ -1383,8 +1401,8 @@ export function basename(path: string, suffix: string = ''): string {
 /**
  * @link https://php.net/manual/en/function.count.php
  */
-export function count(
-    value: any[] | Record<string, any>,
+export function count<TKey extends number | string, TValue>(
+    value: TValue[] | Record<TKey, TValue>,
     mode: typeof COUNT_NORMAL | typeof COUNT_RECURSIVE = COUNT_NORMAL,
 ): number {
     if (mode === COUNT_RECURSIVE) {
@@ -1393,7 +1411,7 @@ export function count(
 
             const isIterable = Array.isArray(item) || (typeof item === 'object' && typeof item !== null);
 
-            return isIterable ? total + count(item, COUNT_RECURSIVE) : total;
+            return isIterable ? total + count(item as any, COUNT_RECURSIVE) : total;
         }, 0);
     }
 
@@ -1618,19 +1636,8 @@ export async function hash(
     binary: boolean = false,
 ): Promise<string> {
     // Compute hash.
-    let digest: Buffer | ArrayBuffer;
-
-    if (typeof crypto !== 'undefined' && crypto.subtle) {
-        // Web Crypto.
-        const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(data));
-        digest = buf;
-    } else {
-        // Node.js.
-        const cryptoNode = require('crypto');
-        const h = cryptoNode.createHash(algo);
-        h.update(Buffer.from(data, 'binary'));
-        digest = h.digest();
-    }
+    const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(data));
+    const digest = buf;
 
     // Convert to output form.
     if (binary) {
@@ -1646,13 +1653,9 @@ export async function hash(
     }
 
     // Hex lowercase.
-    if (digest instanceof ArrayBuffer) {
-        return Array.from(new Uint8Array(digest))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
-    }
-
-    return digest.toString('hex');
+    return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
 }
 
 /**
@@ -1700,8 +1703,8 @@ export function htmlspecialchars(
 /**
  * @link https://www.php.net/manual/en/function.http-build-query.php
  */
-export function http_build_query(
-    data: any[] | Record<string, any>,
+export function http_build_query<TKey extends number | string, TValue>(
+    data: TValue[] | Record<TKey, TValue>,
     numericPrefix: string = '',
     argSeparator: string = '&',
     encodingType: number = PHP_QUERY_RFC1738,
@@ -1758,7 +1761,11 @@ export function http_build_query(
 /**
  * @link https://php.net/manual/en/function.in-array.php
  */
-export function in_array(needle: any, haystack: any[] | Record<string, any>, strict: boolean = false): boolean {
+export function in_array<TKey extends number | string, TValue>(
+    needle: any,
+    haystack: TValue[] | Record<TKey, TValue>,
+    strict: boolean = false,
+): boolean {
     for (let value of Object.values(haystack)) {
         if (strict) {
             if (needle === value) {
@@ -1767,7 +1774,7 @@ export function in_array(needle: any, haystack: any[] | Record<string, any>, str
         } else {
             // Convert arrays and objects to strings in order to compare structure since JS compares objects based on reference.
             needle = typeof needle === 'object' && needle !== null ? JSON.stringify(needle) : needle;
-            value = typeof value === 'object' && value !== null ? JSON.stringify(value) : value;
+            value = (typeof value === 'object' && value !== null ? JSON.stringify(value) : value) as TValue;
 
             if (needle == value) {
                 return true;
@@ -1822,8 +1829,8 @@ export function isset(...vars: any[]): boolean {
 /**
  * @link https://www.php.net/manual/en/function.krsort.php
  */
-export function krsort(
-    array: any[] | Record<string, any>,
+export function krsort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_REGULAR,
 ): true {
     const sortedEntries = Object.entries(array).sort(([a], [b]) => -compareKeys(a, b, flags));
@@ -1841,11 +1848,11 @@ export function krsort(
 
     // Clear and rebuild in reverse-sorted order
     for (const key of Object.keys(array)) {
-        delete array[key];
+        delete array[key as TKey];
     }
 
     for (const [key, value] of sortedEntries) {
-        array[key] = value;
+        array[key as TKey] = value;
     }
 
     return true;
@@ -1854,8 +1861,8 @@ export function krsort(
 /**
  * @link https://www.php.net/manual/en/function.ksort.php
  */
-export function ksort(
-    array: any[] | Record<string, any>,
+export function ksort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags: typeof SORT_REGULAR | typeof SORT_NUMERIC | typeof SORT_STRING = SORT_REGULAR,
 ): true {
     const sortedEntries = Object.entries(array).sort(([a], [b]) => compareKeys(a, b, flags));
@@ -1873,11 +1880,11 @@ export function ksort(
 
     // Delete all keys, then reassign in sorted order.
     for (const key of Object.keys(array)) {
-        delete array[key];
+        delete array[key as TKey];
     }
 
     for (const [key, value] of sortedEntries) {
-        array[key] = value;
+        array[key as TKey] = value;
     }
 
     return true;
@@ -2297,8 +2304,9 @@ export function mb_substr(string: string, start: number, length?: number): strin
 }
 
 /**
- * PHP returns 1 if the pattern matches given subject, 0 if it does not, or false if an
- * error occurred. We are just returning a boolean instead.
+ * PHP returns 1 if the pattern matches given subject, 0 if it does not, or false if an error occurred. We are just
+ * returning a boolean instead.
+ *
  * @link https://php.net/manual/en/function.preg-match.php
  */
 export function preg_match(pattern: string, subject: string, matches?: string[]): boolean {
@@ -2871,8 +2879,8 @@ export function range(start: number | string, end: number | string, step: number
 /**
  * @link https://www.php.net/manual/en/function.rsort.php
  */
-export function rsort(
-    array: any[] | Record<string, any>,
+export function rsort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
@@ -2921,7 +2929,7 @@ export function rsort(
 
         // Reindex keys numerically.
         for (let i = 0; i < sorted.length; i++) {
-            array[i] = sorted[i];
+            (array as any)[i] = sorted[i];
         }
     }
 
@@ -2948,8 +2956,8 @@ export function rtrim(string: string, characters?: string): string {
 /**
  * @link https://www.php.net/manual/en/function.sort.php
  */
-export function sort(
-    array: any[] | Record<string, any>,
+export function sort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
     flags:
         | typeof SORT_REGULAR
         | typeof SORT_NUMERIC
@@ -2998,7 +3006,7 @@ export function sort(
 
         // PHP resets array keys to 0-based numeric
         for (let i = 0; i < sorted.length; i++) {
-            array[i] = sorted[i];
+            (array as any)[i] = sorted[i];
         }
     }
 
@@ -3186,11 +3194,12 @@ export function str_replace(
 }
 
 /**
- * format can be one of the following:
+ * Format can be one of the following:
  * 0 - returns the number of words found
  * 1 - returns an array containing all the words found inside the string
  * 2 - returns an object, where the key is the numeric position of the word inside the string and the value is the
  * actual word itself
+ *
  * @link https://php.net/manual/en/function.str-word-count.php
  */
 export function str_word_count(
@@ -3396,7 +3405,7 @@ export function strstr(haystack: string, needle: string, beforeNeedle: boolean =
 
 /**
  * @link https://php.net/manual/en/function.strtr.php
- * @throws If from is a string and to is undefined.
+ * @throws {Error} If from is a string and to is undefined.
  */
 export function strtr(string: string, from: string | Record<string, string>, to?: string): string {
     // 2-argument mode: object mapping.
@@ -3610,15 +3619,18 @@ export function trim(string: string, characters: string = ' \n\r\t\v\0'): string
 /**
  * @link https://php.net/manual/en/function.uasort.php
  */
-export function uasort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
+export function uasort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback: (a: TValue, b: TValue) => number,
+): true {
     const sortedEntries = Object.entries(array).sort(([_aKey, aVal], [_bKey, bVal]) => callback(aVal, bVal));
-    const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+    const result = Array.isArray(array) ? ([] as TValue[]) : ({} as Record<TKey, TValue>);
 
     for (const [key, value] of sortedEntries) {
         if (Array.isArray(result)) {
             result.push(value);
         } else {
-            (result as Record<string, any>)[key] = value;
+            (result as Record<TKey, TValue>)[key as TKey] = value;
         }
     }
 
@@ -3651,8 +3663,11 @@ export function ucwords(string: string, separators: string = ' \t\r\n\f\v'): str
 /**
  * @link https://www.php.net/manual/en/function.uksort.php
  */
-export function uksort(array: any[] | Record<string, any>, callback: (a: any, b: any) => number): true {
-    const sortedEntries = Object.entries(array).sort(([a], [b]) => callback(a, b));
+export function uksort<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    callback: (a: TKey, b: TKey) => number,
+): true {
+    const sortedEntries = Object.entries(array).sort(([a], [b]) => callback(a as TKey, b as TKey));
 
     if (Array.isArray(array)) {
         // Clear and reassign values in place.
@@ -3667,22 +3682,25 @@ export function uksort(array: any[] | Record<string, any>, callback: (a: any, b:
 
     // Delete all keys, then reassign in sorted order.
     for (const key of Object.keys(array)) {
-        delete array[key];
+        delete array[key as TKey];
     }
 
     for (const [key, value] of sortedEntries) {
-        array[key] = value;
+        array[key as TKey] = value;
     }
 
     return true;
 }
 
 /**
- * @link https://www.php.net/manual/en/function.unset.php
- *
  * Variables cannot be unset in JS, so we will only accept an array / object and key.
+ *
+ * @link https://www.php.net/manual/en/function.unset.php
  */
-export function unset(array: any[] | Record<string, any>, key: number | string): void {
+export function unset<TKey extends number | string, TValue>(
+    array: TValue[] | Record<TKey, TValue>,
+    key: number | string,
+): void {
     delete (array as any)[key];
 }
 

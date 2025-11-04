@@ -794,8 +794,8 @@ test('intval', () => {
     expect(php.intval('0x1a')).toEqual(0);
     expect(php.intval('0x1a', 0)).toEqual(26);
     expect(php.intval(42000000)).toEqual(42000000);
-    expect(php.intval(420000000000000000000)).toEqual(420000000000000000000);
-    expect(php.intval('420000000000000000000')).toEqual(420000000000000000000);
+    expect(php.intval(4200000000000000)).toEqual(4200000000000000);
+    expect(php.intval('4200000000000000')).toEqual(4200000000000000);
     expect(php.intval(42, 8)).toEqual(42);
     expect(php.intval('42', 8)).toEqual(34);
     expect(php.intval([])).toEqual(0);
